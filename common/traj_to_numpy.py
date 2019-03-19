@@ -1,9 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-from MDAnalysis.core.universe import Universe
-from MDAnalysis.core.AtomGroup import AtomGroup
-from numpy.core.multiarray import ndarray
+from MDAnalysis import Universe
+from MDAnalysis import AtomGroup
 
 
 class TrajectoryToNumpy:
@@ -12,19 +11,19 @@ class TrajectoryToNumpy:
         self.u     = u
         self.group = u.select_atoms(selection)
         assert isinstance(self.group, AtomGroup)
-        
+
     @property
     def to_fac(self):
         """
         FAC order: FRAME/ATOM/COORD
         :return: FAC numpy array
         """
-        fac = [] 
+        fac = []
         for ts in self.u.trajectory:
             fac.append(self.group.positions)
-        
+
         return np.array(fac)
-    
+
     @property
     def to_afc(self):
         """
@@ -33,5 +32,5 @@ class TrajectoryToNumpy:
         """
         fac = self.to_fac
         afc = np.transpose(fac, (1, 0, 2))
-        
+
         return afc
