@@ -1,40 +1,36 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-# from .wholemolecules import Wholemolecules
-from MDAnalysis import AtomGroup
 
 class Distance:
-    def __init__(self, ag1, ag2):
-        assert isinstance(ag1, AtomGroup)
-        assert isinstance(ag2, AtomGroup)
-        assert np.all(ag1.dimensions == ag2.dimensions)
-        #Wholemolecules(ag1)
-        #Wholemolecules(ag2)
-        self.pbc  = ag1.dimensions[0:3]
-        self.cag1 = ag1.center_of_geometry()
-        self.cag2 = ag2.center_of_geometry()
+    def __init__(self, r1, r2, pbc):
+        assert isinstance(r1, np.ndarray)
+        assert isinstance(r2, np.ndarray)
+        assert isinstance(pbc, np.ndarray)
+        self.pbc = pbc
+        self.r1  = r1
+        self.r2  = r2
 
-    def actual_distance(self, pbc=None):
-        dr = self.cag2 - self.cag1
+    def distance(self, pbc=None):
+        dr = self.r1 - self.r2
         if pbc:
             dr -= self.pbc * np.round(dr/self.pbc)
-            return dr
+            return np.linalg.norm(dr)
         else:
-            return dr
+            return np.linalg.norm(dr)
 
-    def scale_distance(self, pbc=None):
-        self.cag1 -= self.pbc/2
-        self.cag2 -= self.pbc/2
-        dr = (self.cag2 - self.cag1)/self.pbc
+    def distance2(self, pbc=None):
+        dr = self.r1 - self.r2
         if pbc:
-            dr -= np.round(dr)
-            return dr
+            dr -= self.pbc * np.round(dr/self.pbc)
+            if dr.shape[1] == 3:
+                return np.sum(dr**2, axis = 1)
+            else:
+                return np.sum(dr**2)
         else:
-            return dr
-
-
-
-
+            if dr.shape[1] == 3:
+                return np.sum(dr**2, axis = 1)
+            else:
+                return np.sum(dr**2)
 
 
