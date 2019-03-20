@@ -5,6 +5,7 @@ from .common.pbc import PBC
 from .common.traj_to_numpy import TrajectoryToNumpy
 from .common.units import *
 from .common.wholemolecules import Wholemolecules
+from .compute.packing_defects import PackingDefects
 
 # THIS WILL WORK IF I DO
 # from SMDAnalysis import *

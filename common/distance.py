@@ -8,7 +8,7 @@ class Distance:
     def __init__(self, ag1, ag2):
         assert isinstance(ag1, AtomGroup)
         assert isinstance(ag2, AtomGroup)
-        assert all(ag1.dimensions == ag2.dimensions)
+        assert np.all(ag1.dimensions == ag2.dimensions)
         #Wholemolecules(ag1)
         #Wholemolecules(ag2)
         self.pbc  = ag1.dimensions[0:3]
