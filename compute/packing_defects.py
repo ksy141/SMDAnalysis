@@ -29,6 +29,7 @@ class PackingDefects:
         membranes = self.u.select_atoms("resname POPC DOPE SAPI")
 
         for ts in self.u.trajectory:
+
             t = self.u.trajectory.time / 1000 # t in ns
             if t > e:
                 break
@@ -37,34 +38,37 @@ class PackingDefects:
             elif t < b:
                 continue
 
+            print("Starts: %d frame" %ts.frame)
             file = open('top_mdanalysis.xyz', 'a')
             file.write('NUM\n')
             file.write('frame: %d       time: %.3f ns\n' %(ts.frame, t))
             pbc = self.u.dimensions[0:3]
             ns = FastNS(self.grid_size, membranes.positions, self.u.dimensions)
 
+            zt = np.max(membranes.positions[:,2])
+            zb = np.min(membranes.positions[:,2])
+
             dx = dy = dz = 1
             cr = 1.4142 / 2 * dx
             #cr = 1.7320 / 2 * dx
             edge = 0
-            cell_size = 5
+            #cell_size = 5
             xis = int((pbc[0] - 2 * edge) / dx)
             yis = int((pbc[1] - 2 * edge) / dy)
 
             num = 0
-            zt = pbc[2] - 3
 
             for xi in range(xis):
                 for yi in range(yis):
                     x = edge + dx * xi
                     y = edge + dy * yi
                     z = zt
-                    if self.debug:
-                        if abs(y-76.000) > 0.1: continue
-                        if abs(x-40.000) > 0.1: continue
+                    #if self.debug:
+                    #    if abs(y-76.000) > 0.1: continue
+                    #    if abs(x-40.000) > 0.1: continue
                     #print("NOX X, Y IS %.3f %.3f" % (x, y))
-                    # xx = np.arange(x - cell_size, x + cell_size, dx)
-                    # yy = np.arange(y - cell_size, y + cell_size, dy)
+                    #xx = np.arange(x - cell_size, x + cell_size, dx)
+                    #yy = np.arange(y - cell_size, y + cell_size, dy)
 
                     glyatom_z = 0
                     while (z - glyatom_z) > -0.5:
@@ -89,6 +93,14 @@ class PackingDefects:
                         d_gly = 10000
                         min_glyindex = None
                         found_gly = False
+
+
+                       # dist2 = Distance(r, membranes.positions, pbc).distance2(pbc = True)
+                       # min_index = np.argmin(dist2)
+                       # min_atom  = membranes[min_index]
+                       # min_dist  = np.sqrt(np.dist2[min_index])
+
+
                         for ai in indices:
                             atom = membranes[ai]
                             atname = atom.name
@@ -113,7 +125,9 @@ class PackingDefects:
                         if not found_gly:
                             sel = self.u.select_atoms("name C22")
                             dist2 = Distance(r, sel.positions, pbc).distance2(pbc = True)
-                            glyatom_z =  sel[np.argmin(dist2)].position[2]
+                            iindex = np.argmin(dist2)
+                            glyatom_z =  sel[iindex].position[2]
+                            d_gly = np.sqrt(dist2[iindex])
                             if self.debug:
                                 print("gly z (1) =", glyatom_z)
                         else:
