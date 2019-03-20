@@ -35,7 +35,8 @@ class PackingDefects:
                 continue
 
             file = open('top_mdanalysis.xyz', 'a')
-            file.write('NUM\n\n')
+            file.write('NUM\n')
+            file.write('frame: %d time: %.3f ns\n' %(ts.frame, t))
             pbc = self.u.dimensions[0:3]
             ns = FastNS(1, membranes.positions, self.u.dimensions)
 
