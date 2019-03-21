@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5a396271-d90c-4895-8aa9-933dc7a7682c" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/common/distance.py" beforeDir="false" afterPath="$PROJECT_DIR$/common/distance.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compute/packing_defects.py" beforeDir="false" afterPath="$PROJECT_DIR$/compute/packing_defects.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -32,8 +33,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/compute/packing_defects.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="577">
-              <caret line="38" column="63" selection-start-line="38" selection-start-column="63" selection-end-line="38" selection-end-column="63" />
+            <state relative-caret-position="-5314">
+              <caret line="110" column="65" selection-start-line="110" selection-start-column="65" selection-end-line="110" selection-end-column="65" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -89,8 +90,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/common/distance.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="880">
-              <caret line="40" lean-forward="true" selection-start-line="40" selection-end-line="40" />
+            <state relative-caret-position="792">
+              <caret line="38" lean-forward="true" selection-start-line="38" selection-end-line="38" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -122,6 +123,8 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>ai</find>
+      <find>glycerols</find>
+      <find>self.debug</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -143,9 +146,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1658" />
-    <option name="y" value="23" />
-    <option name="width" value="1782" />
+    <option name="x" value="1254" />
+    <option name="y" value="32" />
+    <option name="width" value="2202" />
     <option name="height" value="1337" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -208,18 +211,18 @@
       <option name="presentableId" value="Default" />
       <updated>1552959723269</updated>
       <workItem from="1552959725323" duration="4428000" />
-      <workItem from="1553036015095" duration="13747000" />
+      <workItem from="1553036015095" duration="24429000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="18175000" />
+    <option name="totallyTimeSpent" value="28857000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1658" y="23" width="1782" height="1337" extended-state="0" />
+    <frame x="1254" y="32" width="2202" height="1337" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49959838" visible="true" weight="0.25287357" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49959838" visible="true" weight="0.13981481" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" sideWeight="0.5004016" side_tool="true" weight="0.25287357" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -255,8 +258,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/common/distance.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="880">
-          <caret line="40" lean-forward="true" selection-start-line="40" selection-end-line="40" />
+        <state relative-caret-position="792">
+          <caret line="38" lean-forward="true" selection-start-line="38" selection-end-line="38" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>
@@ -317,8 +320,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/compute/packing_defects.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="577">
-          <caret line="38" column="63" selection-start-line="38" selection-start-column="63" selection-end-line="38" selection-end-column="63" />
+        <state relative-caret-position="-5314">
+          <caret line="110" column="65" selection-start-line="110" selection-start-column="65" selection-end-line="110" selection-end-column="65" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>

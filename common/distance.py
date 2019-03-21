@@ -23,14 +23,16 @@ class Distance:
         dr = self.r1 - self.r2
         if pbc:
             dr -= self.pbc * np.round(dr/self.pbc)
-            if dr.shape[1] == 3:
-                return np.sum(dr**2, axis = 1)
-            else:
-                return np.sum(dr**2)
+            return np.sum(dr**2, axis=-1)
+            #if dr.shape[1] == 3:
+            #    return np.sum(dr**2, axis = 1)
+            #else:
+            #    return np.sum(dr**2)
         else:
-            if dr.shape[1] == 3:
-                return np.sum(dr**2, axis = 1)
-            else:
-                return np.sum(dr**2)
+            return np.sum(dr**2, axis=-1)
+            #if dr.shape[1] == 3:
+            #    return np.sum(dr**2, axis = 1)
+            #else:
+            #    return np.sum(dr**2)
 
 

@@ -4,7 +4,6 @@ import subprocess
 import numpy as np
 from ..common.distance import Distance
 from MDAnalysis import Universe
-from MDAnalysis import AtomGroup
 from MDAnalysis.lib.nsgrid import FastNS
 
 
@@ -16,6 +15,7 @@ class PackingDefects:
         self.grid_size = grid_size
         pass
 
+
     def compute_packing_defects(self, b=0, e=10000):
         ### b and e in ns ###
         start = time.time()
@@ -26,7 +26,10 @@ class PackingDefects:
         radii = {'C': 1.7, 'H': 1.2, 'O': 1.52, 'N': 1.55, 'P': 1.8}
         heads, glycerols, tails = self._selection()
         trios = list(set(self.u.select_atoms("resname TRIO").names))
-        membranes = self.u.select_atoms("resname POPC DOPE SAPI")
+
+        membranes = self.u.select_atoms("resname POPC DOPE SAPI TRIO")
+        c22s = self.u.select_atoms("name C22 and resname POPC DOPE SAPI")
+
 
         for ts in self.u.trajectory:
 
@@ -43,16 +46,15 @@ class PackingDefects:
             file.write('NUM\n')
             file.write('frame: %d       time: %.3f ns\n' %(ts.frame, t))
             pbc = self.u.dimensions[0:3]
-            ns = FastNS(self.grid_size, membranes.positions, self.u.dimensions)
+
+            ns  = FastNS(self.grid_size, membranes.positions, self.u.dimensions)
 
             zt = np.max(membranes.positions[:,2])
             zb = np.min(membranes.positions[:,2])
 
             dx = dy = dz = 1
             cr = 1.4142 / 2 * dx
-            #cr = 1.7320 / 2 * dx
             edge = 0
-            #cell_size = 5
             xis = int((pbc[0] - 2 * edge) / dx)
             yis = int((pbc[1] - 2 * edge) / dy)
 
@@ -63,118 +65,90 @@ class PackingDefects:
                     x = edge + dx * xi
                     y = edge + dy * yi
                     z = zt
-                    #if self.debug:
-                    #    if abs(y-76.000) > 0.1: continue
-                    #    if abs(x-40.000) > 0.1: continue
-                    #print("NOX X, Y IS %.3f %.3f" % (x, y))
-                    #xx = np.arange(x - cell_size, x + cell_size, dx)
-                    #yy = np.arange(y - cell_size, y + cell_size, dy)
+
+
+                    if self.debug:
+                        if abs(x - 37.000) > 0.1: continue
+                        if abs(y - 77.000) > 0.1: continue
+                        print("NOX X, Y IS %.3f %.3f" % (x, y))
+
 
                     glyatom_z = 0
-                    while (z - glyatom_z) > -0.5:
+                    while (z - glyatom_z) > -1:
                         if self.debug:
-                            print("z =", z)
-                        # while z > pbc[2]/2:
+                            print("Z is %.3f" % z)
                         r = np.array([x, y, z])
-                        #print("Z is %.3f" % z)
-                        # zz = np.zeros(len(xx)) + (z - 1)
-                        #cells = np.array(np.meshgrid(xx, yy, zz)).T.reshape(-1, 3)
-                        cells = np.array([r])
+                        r_cell = np.zeros((1,3))
+                        r_cell[0] = r - np.array([0, 0, 0])
 
-                        ### TIME CONSUMING PART ###
-                        indices = ns.search(cells).get_indices()
-                        #indices.extend(ns.self_search(cells).get_indices())
+                        indices = ns.search(r_cell).get_indices()
                         indices = list(set([item for sublist in indices for item in sublist]))
 
-                        d = 10000
-                        min_atname = None
-                        min_index = None
-                        min_dist = 10000
-                        d_gly = 10000
-                        min_glyindex = None
-                        found_gly = False
+                        dist2 = np.array([Distance(r, membranes[i].position, pbc).distance2(pbc=True) for i in indices])
 
-
-                       # dist2 = Distance(r, membranes.positions, pbc).distance2(pbc = True)
-                       # min_index = np.argmin(dist2)
-                       # min_atom  = membranes[min_index]
-                       # min_dist  = np.sqrt(np.dist2[min_index])
-
-
-                        for ai in indices:
-                            atom = membranes[ai]
-                            atname = atom.name
-                            d = Distance(r, atom.position, pbc).distance(pbc=True)
-                            if d < min_dist:
-                                min_atname = atname
-                                min_dist = d
-                                min_index = ai
-
-                            if atname == 'C22' and d < d_gly:
-                                min_glyindex = ai
-                                d_gly = d
-                                found_gly = True
-
-                        if self.debug:
-                            print("d_gly = ", d_gly)
-                            try:
-                                print("gly coordinate:", membranes[min_glyindex].position)
-                            except: pass
-
-                        # print(min_atname, min_dist)
-                        if not found_gly:
-                            sel = self.u.select_atoms("name C22")
-                            dist2 = Distance(r, sel.positions, pbc).distance2(pbc = True)
-                            iindex = np.argmin(dist2)
-                            glyatom_z =  sel[iindex].position[2]
-                            d_gly = np.sqrt(dist2[iindex])
-                            if self.debug:
-                                print("gly z (1) =", glyatom_z)
-                        else:
-                            glyatom = membranes[min_glyindex]
-                            glyatom_z = glyatom.position[2]
-                            if self.debug:
-                                print("gly z (2) =", glyatom_z)
-
-
-                        if min_atname == None:
+                        if len(dist2) == 0:
                             z -= dz
                             continue
+
+                        dist_index = np.argmin(dist2)
+                        memb_index = indices[dist_index]
+                        min_atname = membranes[memb_index].name
+                        min_resname = membranes[memb_index].resname
+                        min_dist = np.sqrt(dist2[dist_index])
+
+                        if self.debug:
+                            new_dist2 = np.array(Distance(r, membranes.positions, pbc).distance2(pbc=True))
+                            new_minindex = np.argmin(new_dist2)
+                            new_atname = membranes[new_minindex].name
+                            new_dist = np.sqrt(new_dist2[new_minindex])
+                            print("coarsed: nearast atom: %6s  %6s  %6.3f " %(min_atname, memb_index, min_dist))
+                            print("atomsel: nearest atom: %6s  %6s  %6.3f " %(new_atname, new_minindex, new_dist))
+
+
+                        dist2 = np.array(Distance(r, c22s.positions, pbc).distance2(pbc=True))
+                        c22s_cindex = np.argmin(dist2)
+                        d_gly = np.sqrt(dist2[c22s_cindex])
+                        glyatom_z = c22s[c22s_cindex].position[2]
+
+
+                        if self.debug:
+                            new_dist2 = np.array(Distance(r, c22s.positions, pbc).distance2(pbc=True))
+                            new_minindex = np.argmin(new_dist2)
+                            new_dist = np.sqrt(new_dist2[new_minindex])
+                            print("coarsed: nearast glycerol atom: %5d  %6.3f " % (c22s_cindex, d_gly))
+                            print("atomsel: nearest glycerol atom: %5d  %6.3f " % (new_minindex, new_dist))
+
+
 
                         if min_dist < (cr + radii[min_atname[0]]):
                             if self.debug:
                                 print("overlap happen ")
-                            if min_atname in heads:
+                            if min_atname in heads and min_resname != 'TRIO':
                                 if self.debug:
                                     print("with HEAD")
                                 pass
-                            elif min_atname in glycerols:
+                            elif min_atname in glycerols and min_resname != 'TRIO':
                                 if self.debug:
                                     print("with GLYCEROL")
                                 pass
-                            elif min_atname in tails:
+                            elif min_atname in tails and min_resname != 'TRIO':
                                 if self.debug:
                                     print("with TAIL")
                                 num += 1
                                 file.write('H %.3f %.3f %.3f\n' % (x, y, z))
-                            elif min_atname in trios:
+                            elif min_atname in trios and min_resname == 'TRIO':
                                 if self.debug:
                                     print("wtih TRIO")
                                 num += 1
                                 file.write('H %.3f %.3f %.3f\n' % (x, y, z))
                                 pass
-                            #else:
-                            #    print("SOMETHING WEIRD!")
+
                             break
 
-                        #if min_glyindex == None:
-                        #    z -= dz
-                        #    continue
 
                         z -= dz
 
-                        if (z - glyatom_z) <= -0.5:
-                            # if z < pbc[2]/2 + 1:
+                        if (z - glyatom_z) <= -1:
                             if self.debug:
                                 print("geometrical defect")
                             file.write('H %.3f %.3f %.3f\n' % (x, y, z))
@@ -187,6 +161,10 @@ class PackingDefects:
         end = time.time()
         timelength = (end - start) / 60
         print("time spent: %.2f min" % timelength)
+
+
+
+
 
     def _selection(self):
         head = "name P N HP32 HP42 HP52 O14 "
