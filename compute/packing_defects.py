@@ -22,7 +22,7 @@ class PackingDefects:
 
         file = open('top_mdanalysis.xyz', 'w')
         file.close()
-        self.matrix = []
+        #self.matrix = []
 
         radii = {'C': 1.7, 'H': 1.2, 'O': 1.52, 'N': 1.55, 'P': 1.8}
         heads, glycerols, tails = self._selection()
@@ -58,7 +58,7 @@ class PackingDefects:
             edge = 0
             xis = int((pbc[0] - 2 * edge) / dx)
             yis = int((pbc[1] - 2 * edge) / dy)
-            frame_matrix = np.zeros((xis, yis))
+            #frame_matrix = np.zeros((xis, yis))
 
             num = 0
 
@@ -138,14 +138,14 @@ class PackingDefects:
                                     print("with TAIL")
                                 num += 1
                                 file.write('H %.3f %.3f %.3f\n' % (x, y, z))
-                                frame_matrix[xi][yi] = 1
+                                #frame_matrix[xi][yi] = 1
 
                             elif min_atname in trios and min_resname == 'TRIO':
                                 if self.debug:
                                     print("wtih TRIO")
                                 num += 1
                                 file.write('H %.3f %.3f %.3f\n' % (x, y, z))
-                                frame_matrix[xi][yi] = 1
+                                #frame_matrix[xi][yi] = 1
 
                                 pass
 
@@ -157,12 +157,12 @@ class PackingDefects:
                         if (z - glyatom_z) <= -1:
                             if self.debug:
                                 print("geometrical defect")
-                                frame_matrix[xi][yi] = 1
+                                #frame_matrix[xi][yi] = 1
                             file.write('H %.3f %.3f %.3f\n' % (x, y, z))
                             num += 1
 
 
-            self.matrix.append(frame_matrix)
+            #self.matrix.append(frame_matrix)
             file.close()
             subprocess.call(['sed', '-i.bak', 's/NUM/{:d}/'.format(num), 'top_mdanalysis.xyz'])
             subprocess.call(['rm', '-rf', 'top_mdanalysis.xyz.bak'])
@@ -209,26 +209,39 @@ class PackingDefects:
 
 
 
-    def defect_size(self):
-        for matrix in self.matrix:
-            graph = self._make_graph(matrix)
+    def defect_size(self, nblocks = 10, nbins=20):
+        l = [k for i in self.matrix for j in i for k in j]
+        amin = min(l)
+        amax = max(l)
+        del l
+        print(amin, amax)
+        bins = np.linspace(amin, amax, nbins)
+        num_matrix = len(self.matrix)
+        hist = np.zeros((nblocks, nbins-1))
+
+        for i in range(nblocks):
+            start = int(num_matrix/nblocks) * i
+            end   = int(num_matrix/nblocks) * (i+1)
 
             defects = []
-            visited = set([])
-            for n in graph:
-                if n not in visited:
-                    defect_loc = self._dfs(graph, n)
-                    visited = visited.union(defect_loc)
-                    defects.append(len(defect_loc))
+            for matrix in self.matrix[start:end]:
+                graph = self._make_graph(matrix)
 
+                visited = set([])
+                for n in graph:
+                    if n not in visited:
+                        defect_loc = self._dfs(graph, n)
+                        visited = visited.union(defect_loc)
+                        defects.append(len(defect_loc))
 
-        amin = np.amin(defects)
-        amax = np.amax(defects)
-        hist, bins = np.histogram(defects, bins=np.linspace(amin, amax, 20))
+            hist[i], bin_edges = np.histogram(defects, bins=bins, density=True)
+
+        average = np.average(hist, axis=0)
+        std = np.std(hist, axis=0)
 
         file = open('defect_histogram.dat', 'w')
-        for i in range(len(bins)-1):
-            file.write('{: .3f} {: .3f}\n'.format(bins[i], hist[i]))
+        for i in range(nbins-1):
+            file.write('{: .3f} {: .3f} {: .3f}\n'.format(bins[i], average[i], std[i]))
         file.close()
 
 
