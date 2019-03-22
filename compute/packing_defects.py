@@ -209,13 +209,8 @@ class PackingDefects:
 
 
 
-    def defect_size(self, nblocks = 10, nbins=20):
-        l = [k for i in self.matrix for j in i for k in j]
-        amin = min(l)
-        amax = max(l)
-        del l
-        print(amin, amax)
-        bins = np.linspace(amin, amax, nbins)
+    def defect_size(self, nblocks = 10, nbins=50):
+        bins = np.linspace(0, 150, nbins)
         num_matrix = len(self.matrix)
         hist = np.zeros((nblocks, nbins-1))
 
