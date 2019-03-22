@@ -22,6 +22,7 @@ class PackingDefects:
 
         file = open('top_mdanalysis.xyz', 'w')
         file.close()
+        self.matrix = []
 
         radii = {'C': 1.7, 'H': 1.2, 'O': 1.52, 'N': 1.55, 'P': 1.8}
         heads, glycerols, tails = self._selection()
@@ -57,6 +58,7 @@ class PackingDefects:
             edge = 0
             xis = int((pbc[0] - 2 * edge) / dx)
             yis = int((pbc[1] - 2 * edge) / dy)
+            frame_matrix = np.zeros((xis, yis))
 
             num = 0
 
@@ -136,11 +138,15 @@ class PackingDefects:
                                     print("with TAIL")
                                 num += 1
                                 file.write('H %.3f %.3f %.3f\n' % (x, y, z))
+                                frame_matrix[xi][yi] = 1
+
                             elif min_atname in trios and min_resname == 'TRIO':
                                 if self.debug:
                                     print("wtih TRIO")
                                 num += 1
                                 file.write('H %.3f %.3f %.3f\n' % (x, y, z))
+                                frame_matrix[xi][yi] = 1
+
                                 pass
 
                             break
@@ -151,9 +157,12 @@ class PackingDefects:
                         if (z - glyatom_z) <= -1:
                             if self.debug:
                                 print("geometrical defect")
+                                frame_matrix[xi][yi] = 1
                             file.write('H %.3f %.3f %.3f\n' % (x, y, z))
                             num += 1
 
+
+            self.matrix.append(frame_matrix)
             file.close()
             subprocess.call(['sed', '-i.bak', 's/NUM/{:d}/'.format(num), 'top_mdanalysis.xyz'])
             subprocess.call(['rm', '-rf', 'top_mdanalysis.xyz.bak'])
@@ -163,6 +172,64 @@ class PackingDefects:
         print("time spent: %.2f min" % timelength)
 
 
+
+    def _dfs(self, graph, start):
+        visited, stack = set(), [start]
+        while stack:
+            vertex = stack.pop()
+            if vertex not in visited:
+                visited.add(vertex)
+                stack.extend(graph[vertex] - visited)
+        return visited
+
+
+    def _make_graph(self, frame_matrix):
+        graph = {}
+        xis, yis = frame_matrix.shape
+
+        for xi in range(xis):
+            for yi in range(yis):
+                if frame_matrix[xi][yi] == 0:
+                    continue
+
+                n = xi * yis + yi
+                nlist = []
+
+                for dx in [-1, 0, 1]:
+                    for dy in [-1, 0, 1]:
+                        if dx * dy == 0:
+                            x = divmod(xi + dx, xis)[1]
+                            y = divmod(yi + dy, yis)[1]
+                            if frame_matrix[x, y] == 1:
+                                ndn = x * yis + y
+                                nlist.append(ndn)
+
+                graph[n] = set(nlist) - set([n])
+        return graph
+
+
+
+    def defect_size(self):
+        for matrix in self.matrix:
+            graph = self._make_graph(matrix)
+
+            defects = []
+            visited = set([])
+            for n in graph:
+                if n not in visited:
+                    defect_loc = self._dfs(graph, n)
+                    visited = visited.union(defect_loc)
+                    defects.append(len(defect_loc))
+
+
+        amin = np.amin(defects)
+        amax = np.amax(defects)
+        hist, bins = np.histogram(defects, bins=np.linspace(amin, amax, 20))
+
+        file = open('defect_histogram.dat', 'w')
+        for i in range(len(bins)-1):
+            file.write('{: .3f} {: .3f}\n'.format(bins[i], hist[i]))
+        file.close()
 
 
 
