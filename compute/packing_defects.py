@@ -209,7 +209,7 @@ class PackingDefects:
 
 
 
-    def defect_size(self, nblocks = 5, nbins=500, bin_max=100):
+    def defect_size(self, nblocks = 5, nbins=100, bin_max=100, density=False, out='defect_histogram.dat'):
         bins = np.linspace(0, 150, nbins)
         num_matrix = len(self.matrix)
         hist = np.zeros((nblocks, nbins-1))
@@ -229,12 +229,12 @@ class PackingDefects:
                         visited = visited.union(defect_loc)
                         defects.append(len(defect_loc))
 
-            hist[i], bin_edges = np.histogram(defects, bins=bins, density=True)
+            hist[i], bin_edges = np.histogram(defects, bins=bins, density=density)
 
         average = np.average(hist, axis=0)
         std = np.std(hist, axis=0)
 
-        file = open('defect_histogram.dat', 'w')
+        file = open(out, 'w')
         for i in range(nbins-1):
             file.write('{: .3f} {: .3f} {: .3f}\n'.format(bins[i], average[i], std[i]))
         file.close()
