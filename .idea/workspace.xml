@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5a396271-d90c-4895-8aa9-933dc7a7682c" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compute/packing_defects.py" beforeDir="false" afterPath="$PROJECT_DIR$/compute/packing_defects.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -32,8 +33,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/compute/packing_defects.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="831">
-              <caret line="237" column="5" selection-start-line="237" selection-start-column="5" selection-end-line="237" selection-end-column="5" />
+            <state relative-caret-position="565">
+              <caret line="98" lean-forward="true" selection-start-line="98" selection-end-line="98" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -125,6 +126,12 @@
       <find>glycerols</find>
       <find>self.debug</find>
       <find>num</find>
+      <find>ns</find>
+      <find>grid</find>
+      <find>geo</find>
+      <find>p</find>
+      <find>self.dx</find>
+      <find>dx</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -146,9 +153,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1334" />
+    <option name="x" value="1434" />
     <option name="y" value="23" />
-    <option name="width" value="2202" />
+    <option name="width" value="2285" />
     <option name="height" value="1337" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -159,7 +166,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -181,6 +187,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -212,18 +219,19 @@
       <updated>1552959723269</updated>
       <workItem from="1552959725323" duration="4428000" />
       <workItem from="1553036015095" duration="30076000" />
-      <workItem from="1553462432305" duration="1273000" />
+      <workItem from="1553462432305" duration="1448000" />
+      <workItem from="1553730512386" duration="11582000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="35777000" />
+    <option name="totallyTimeSpent" value="47534000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1334" y="23" width="2202" height="1337" extended-state="0" />
+    <frame x="1434" y="23" width="2285" height="1337" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49959838" visible="true" weight="0.14074074" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49959838" visible="true" weight="0.13642444" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" sideWeight="0.5004016" side_tool="true" weight="0.25287357" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -256,6 +264,13 @@
     <entry file="file://$PROJECT_DIR$/common/traj_to_np" />
     <entry file="file://$PROJECT_DIR$/common/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/units.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="3" column="18" selection-start-line="3" selection-start-column="18" selection-end-line="3" selection-end-column="18" />
+        </state>
+      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/compute/density.py">
       <provider selected="true" editor-type-id="text-editor" />
@@ -312,17 +327,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/common/units.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="66">
-          <caret line="3" column="18" selection-start-line="3" selection-start-column="18" selection-end-line="3" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/compute/packing_defects.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="831">
-          <caret line="237" column="5" selection-start-line="237" selection-start-column="5" selection-end-line="237" selection-end-column="5" />
+        <state relative-caret-position="565">
+          <caret line="98" lean-forward="true" selection-start-line="98" selection-end-line="98" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>

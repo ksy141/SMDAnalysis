@@ -5,31 +5,54 @@ import numpy as np
 from ..common.distance import Distance
 from MDAnalysis import Universe
 from MDAnalysis.lib.nsgrid import FastNS
+import multiprocessing
+from multiprocessing import Pool
 
 
 class PackingDefects:
-    def __init__(self, u, debug = False, grid_size = 3):
+    def __init__(self, u, grid_size = 2, debug = False, np = multiprocessing.cpu_count()):
         assert isinstance(u, Universe)
         self.u = u
         self.debug = debug
+        self.np = np
+        print("Number of processes: ", np)
         self.grid_size = grid_size
+        self.radii = {'C': 1.7, 'H': 1.2, 'O': 1.52, 'N': 1.55, 'P': 1.8}
+        self.heads, self.glycerols, self.tails = self._selection()
+        self.trios = list(set(u.select_atoms("resname TRIO").names))
+        self.membranes = u.select_atoms("resname POPC DOPE SAPI TRIO")
+        self.c22s = u.select_atoms("name C22 and resname POPC DOPE SAPI")
         pass
 
 
-    def compute_packing_defects(self, b=0, e=10000):
+    def test(self, num):
+        print(num * num)
+
+
+    def compute_packing_defects(self, b=0, e=10000, geo='top_g.xyz', che='top_c.xyz', all='top_a.xyz'):
+        arr = np.arange(10)
+        pool = Pool(processes=4)
+        print(arr, pool)
+        pool.map(unwrap_self, zip([self] * len(arr), arr))
+
+
         ### b and e in ns ###
         start = time.time()
 
-        file = open('top_mdanalysis.xyz', 'w')
-        file.close()
-        self.matrix = []
+        gfile = open(geo, 'w')
+        cfile = open(che, 'w')
+        afile = open(all, 'w')
+        gfile.close()
+        cfile.close()
+        afile.close()
 
-        radii = {'C': 1.7, 'H': 1.2, 'O': 1.52, 'N': 1.55, 'P': 1.8}
-        heads, glycerols, tails = self._selection()
-        trios = list(set(self.u.select_atoms("resname TRIO").names))
+        geo_matrices = []
+        che_matrices = []
+        all_matrices = []
 
-        membranes = self.u.select_atoms("resname POPC DOPE SAPI TRIO")
-        c22s = self.u.select_atoms("name C22 and resname POPC DOPE SAPI")
+        dx = dy = self.dz = 1
+        self.cr = 1.4142 / 2 * dx
+        edge = 0
 
 
         for ts in self.u.trajectory:
@@ -43,133 +66,148 @@ class PackingDefects:
                 continue
 
             print("Starts: %d frame" %ts.frame)
-            file = open('top_mdanalysis.xyz', 'a')
-            file.write('NUM\n')
-            file.write('frame: %d       time: %.3f ns\n' %(ts.frame, t))
-            pbc = self.u.dimensions[0:3]
 
-            ns  = FastNS(self.grid_size, membranes.positions, self.u.dimensions)
+            gfile = open(geo, 'a')
+            cfile = open(che, 'a')
+            afile = open(all, 'a')
+            gfile.write('NUM\n')
+            cfile.write('NUM\n')
+            afile.write('NUM\n')
+            gfile.write('frame: %d       time: %.3f ns\n' %(ts.frame, t))
+            cfile.write('frame: %d       time: %.3f ns\n' % (ts.frame, t))
+            afile.write('frame: %d       time: %.3f ns\n' % (ts.frame, t))
 
-            zt = np.max(membranes.positions[:,2])
-            zb = np.min(membranes.positions[:,2])
+            self.pbc = self.u.dimensions[0:3]
 
-            dx = dy = dz = 1
-            cr = 1.4142 / 2 * dx
-            edge = 0
-            xis = int((pbc[0] - 2 * edge) / dx)
-            yis = int((pbc[1] - 2 * edge) / dy)
-            matrix = np.zeros((xis, yis))
+            self.ns = FastNS(self.grid_size, self.membranes.positions, self.u.dimensions)
 
-            num = 0
+            self.zt = np.max(self.membranes.positions[:, 2])
+            self.zb = np.min(self.membranes.positions[:, 2])
 
-            for xi in range(xis):
-                for yi in range(yis):
-                    x = edge + dx * xi
-                    y = edge + dy * yi
-                    z = zt
+            xis = int((self.pbc[0] - 2 * edge) / dx)
+            yis = int((self.pbc[1] - 2 * edge) / dy)
+            geo_matrix = np.zeros((xis, yis))
+            che_matrix = np.zeros((xis, yis))
+            all_matrix = np.zeros((xis, yis))
 
-
-                    if self.debug:
-                        if abs(x - 37.000) > 0.1: continue
-                        if abs(y - 77.000) > 0.1: continue
-                        print("NOX X, Y IS %.3f %.3f" % (x, y))
+            grid = [[x, y] for x in range(xis) for y in range(yis)]
+            print(grid[0])
 
 
-                    glyatom_z = 0
-                    while (z - glyatom_z) > -1:
-                        if self.debug:
-                            print("Z is %.3f" % z)
-                        r = np.array([x, y, z])
-                        r_cell = np.zeros((1,3))
-                        r_cell[0] = r - np.array([0, 0, 0])
-
-                        indices = ns.search(r_cell).get_indices()
-                        indices = list(set([item for sublist in indices for item in sublist]))
-
-                        dist2 = np.array([Distance(r, membranes[i].position, pbc).distance2(pbc=True) for i in indices])
-
-                        if len(dist2) == 0:
-                            z -= dz
-                            continue
-
-                        dist_index = np.argmin(dist2)
-                        memb_index = indices[dist_index]
-                        min_atname = membranes[memb_index].name
-                        min_resname = membranes[memb_index].resname
-                        min_dist = np.sqrt(dist2[dist_index])
-
-                        if self.debug:
-                            new_dist2 = np.array(Distance(r, membranes.positions, pbc).distance2(pbc=True))
-                            new_minindex = np.argmin(new_dist2)
-                            new_atname = membranes[new_minindex].name
-                            new_dist = np.sqrt(new_dist2[new_minindex])
-                            print("coarsed: nearast atom: %6s  %6s  %6.3f " %(min_atname, memb_index, min_dist))
-                            print("atomsel: nearest atom: %6s  %6s  %6.3f " %(new_atname, new_minindex, new_dist))
+            with Pool(self.np) as p:
+                result = p.map(self._defect_check, grid)
 
 
-                        dist2 = np.array(Distance(r, c22s.positions, pbc).distance2(pbc=True))
-                        c22s_cindex = np.argmin(dist2)
-                        d_gly = np.sqrt(dist2[c22s_cindex])
-                        glyatom_z = c22s[c22s_cindex].position[2]
+            c = g = a = 0
+            for coord, check in result:
+                x = coord[0]
+                y = coord[1]
+                z = coord[2]
+                if check == 1:
+                    che_matrix[x][y] = 1
+                    all_matrix[x][y] = 1
+                    c += 1
+                    a += 1
+                    cfile.write('H %.3f %.3f %.3f\n' % (x, y, z))
+                    afile.write('H %.3f %.3f %.3f\n' % (x, y, z))
+
+                elif check == 2:
+                    geo_matrix[x][y] = 1
+                    all_matrix[x][y] = 1
+                    g += 1
+                    a += 1
+                    gfile.write('H %.3f %.3f %.3f\n' % (x, y, z))
+                    afile.write('H %.3f %.3f %.3f\n' % (x, y, z))
+
+            all_matrices.append(all_matrix)
+            geo_matrices.append(geo_matrix)
+            che_matrices.append(che_matrix)
+
+            gfile.close()
+            cfile.close()
+            afile.close()
 
 
-                        if self.debug:
-                            new_dist2 = np.array(Distance(r, c22s.positions, pbc).distance2(pbc=True))
-                            new_minindex = np.argmin(new_dist2)
-                            new_dist = np.sqrt(new_dist2[new_minindex])
-                            print("coarsed: nearast glycerol atom: %5d  %6.3f " % (c22s_cindex, d_gly))
-                            print("atomsel: nearest glycerol atom: %5d  %6.3f " % (new_minindex, new_dist))
+            subprocess.call(['sed', '-i.bak', 's/NUM/{:d}/'.format(a), all])
+            subprocess.call(['sed', '-i.bak', 's/NUM/{:d}/'.format(c), che])
+            subprocess.call(['sed', '-i.bak', 's/NUM/{:d}/'.format(g), geo])
 
-
-
-                        if min_dist < (cr + radii[min_atname[0]]):
-                            if self.debug:
-                                print("overlap happen ")
-                            if min_atname in heads and min_resname != 'TRIO':
-                                if self.debug:
-                                    print("with HEAD")
-                                pass
-                            elif min_atname in glycerols and min_resname != 'TRIO':
-                                if self.debug:
-                                    print("with GLYCEROL")
-                                pass
-                            elif min_atname in tails and min_resname != 'TRIO':
-                                if self.debug:
-                                    print("with TAIL")
-                                num += 1
-                                file.write('H %.3f %.3f %.3f\n' % (x, y, z))
-                                matrix[xi][yi] = 1
-
-                            elif min_atname in trios and min_resname == 'TRIO':
-                                if self.debug:
-                                    print("wtih TRIO")
-                                num += 1
-                                file.write('H %.3f %.3f %.3f\n' % (x, y, z))
-                                matrix[xi][yi] = 1
-
-                                pass
-
-                            break
-
-
-                        z -= dz
-
-                        if (z - glyatom_z) <= -1:
-                            if self.debug:
-                                print("geometrical defect")
-                                matrix[xi][yi] = 1
-                            file.write('H %.3f %.3f %.3f\n' % (x, y, z))
-                            num += 1
-
-
-            self.matrix.append(matrix)
-            file.close()
-            subprocess.call(['sed', '-i.bak', 's/NUM/{:d}/'.format(num), 'top_mdanalysis.xyz'])
-            subprocess.call(['rm', '-rf', 'top_mdanalysis.xyz.bak'])
+            subprocess.call('rm -rf *.bak', shell=True)
 
         end = time.time()
         timelength = (end - start) / 60
         print("time spent: %.2f min" % timelength)
+
+
+
+    def _defect_check(self, position):
+        assert len(position) == 2, "Please provide [x, y] to _defect_check"
+        glyatom_z = 0
+        x = position[0]
+        y = position[1]
+        z = self.zt
+        check = 0
+        # check = 0: no defect
+        # check = 1: chemical defect
+        # check = 2: geometrical defect
+
+        while (z - glyatom_z) > -1:
+            if self.debug:
+                print("Z is %.3f" % z)
+            r = np.array([x, y, z])
+            r_cell = np.zeros((1, 3))
+            r_cell[0] = r - np.array([0, 0, 0])
+
+            indices = self.ns.search(r_cell).get_indices()
+            indices = list(set([item for sublist in indices for item in sublist]))
+
+            dist2 = np.array([Distance(r, self.membranes[i].position, self.pbc).distance2(pbc=True) for i in indices])
+
+            if len(dist2) == 0:
+                z -= self.dz
+                continue
+
+            dist_index = np.argmin(dist2)
+            memb_index = indices[dist_index]
+            min_atname = self.membranes[memb_index].name
+            min_resname = self.membranes[memb_index].resname
+            min_dist = np.sqrt(dist2[dist_index])
+
+            dist2 = np.array(Distance(r, self.c22s.positions, self.pbc).distance2(pbc=True))
+            c22s_cindex = np.argmin(dist2)
+            d_gly = np.sqrt(dist2[c22s_cindex])
+            glyatom_z = self.c22s[c22s_cindex].position[2]
+
+            if min_dist < (self.cr + self.radii[min_atname[0]]):
+                if self.debug:
+                    print("overlap happen ")
+                if min_atname in self.heads and min_resname != 'TRIO':
+                    if self.debug:
+                        print("with HEAD")
+                    pass
+                elif min_atname in self.glycerols and min_resname != 'TRIO':
+                    if self.debug:
+                        print("with GLYCEROL")
+                    pass
+                elif min_atname in self.tails and min_resname != 'TRIO':
+                    if self.debug:
+                        print("with TAIL")
+                    check = 1
+                elif min_atname in self.trios and min_resname == 'TRIO':
+                    if self.debug:
+                        print("wtih TRIO")
+                    check = 1
+                    pass
+                break
+
+            z -= self.dz
+
+            if (z - glyatom_z) <= -1:
+                if self.debug:
+                    print("geometrical defect")
+                check = 2
+
+        return [[x, y, z], check]
 
 
 
@@ -209,9 +247,9 @@ class PackingDefects:
 
 
 
-    def defect_size(self, nblocks = 5, nbins=100, bin_max=100, density=False, out='defect_histogram.dat'):
+    def defect_size(self, matrices, nblocks = 5, nbins=100, bin_max=100, density=False, out='defect_histogram.dat'):
         bins = np.linspace(0, 150, nbins)
-        num_matrix = len(self.matrix)
+        num_matrix = len(matrices)
         hist = np.zeros((nblocks, nbins-1))
 
         for i in range(nblocks):
@@ -219,7 +257,7 @@ class PackingDefects:
             end   = int(num_matrix/nblocks) * (i+1)
 
             defects = []
-            for matrix in self.matrix[start:end]:
+            for matrix in matrices[start:end]:
                 graph = self._make_graph(matrix)
 
                 visited = set([])
@@ -269,4 +307,3 @@ class PackingDefects:
         tails = tail.split()[1:]
 
         return heads, glycerols, tails
-
