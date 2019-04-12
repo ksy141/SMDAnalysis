@@ -157,7 +157,7 @@ class PackingDefects:
                         if (z - glyatom_z) <= -1:
                             if self.debug:
                                 print("geometrical defect")
-                                matrix[xi][yi] = 1
+                            matrix[xi][yi] = 1
                             file.write('H %.3f %.3f %.3f\n' % (x, y, z))
                             num += 1
 
@@ -170,7 +170,7 @@ class PackingDefects:
         end = time.time()
         timelength = (end - start) / 60
         print("time spent: %.2f min" % timelength)
-
+        return self.matrix
 
 
     def _dfs(self, graph, start):
