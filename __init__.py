@@ -11,6 +11,8 @@ from .common.wholemolecules import Wholemolecules
 from .compute.packing_defects import PackingDefects
 from .compute.order_parameter import OrderParameters
 from .compute.density import Density
+from .compute.membrane import Membrane
+
 # THIS WILL WORK IF I DO
 # from SMDAnalysis import *
 __all__ = ['common', 'compute']
