@@ -286,6 +286,7 @@ class PackingDefects:
                 z -= self.dz
                 continue
 
+
             dist_index = np.argmin(dist2)
             memb_index = indices[dist_index]
             min_atname = self.membranes[memb_index].name
@@ -299,12 +300,15 @@ class PackingDefects:
                     check = 2
                 break
 
+
             z -= self.dz
 
             if (z - self.glyatom_z) <= -1:
                 check = 2
 
+
         return [[x, y, z], check]
+
 
 
 
