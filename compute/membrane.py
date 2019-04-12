@@ -17,13 +17,13 @@ class Membrane:
             z.append(z/10)
 
             t = np.array(t); x = np.array(x); y = np.array(y); z = np.array(z)
-        
+
         return t, x, y, z
 
 
     def apl(self, u, b, e, skip=1):
         N = len(u.select_atoms("name P"))/2
-        t, x, y, z = self.dimensions(u, b, e, skip))
+        t, x, y, z = self.dimensions(u, b, e, skip)
         return t, x*y/N
 
 
