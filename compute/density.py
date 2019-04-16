@@ -86,7 +86,7 @@ class Density:
 
         average, std = Block().block(Y, nblocks)
         
-        return np.linspace(0, X/10, num=nbins), average*1000, std*1000
+        return np.linspace(0, X/10, num=nbins), average*1000, std*1000 # nm, kg/m3 kg/m3
 
 
 
