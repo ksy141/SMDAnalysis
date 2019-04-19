@@ -12,6 +12,9 @@ from .compute.packing_defects import PackingDefects
 from .compute.order_parameter import OrderParameters
 from .compute.density import Density
 from .compute.membrane import Membrane
+from .compute.coord import Coord
+from .compute.dihedral import Dihedral
+from .common.covariance import Covariance
 
 # THIS WILL WORK IF I DO
 # from SMDAnalysis import *
