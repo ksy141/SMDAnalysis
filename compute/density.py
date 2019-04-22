@@ -23,7 +23,7 @@ class Density:
         
         ### Analyze a fragment of trajectory in each core
         def worker(u, bb, ee, selection, nbins, queue, pos):
-            print(multiprocessing.current_process().name, 'Starting')
+            #print(multiprocessing.current_process().name, 'Starting')
             
             zs = []
             densities = []
@@ -49,11 +49,12 @@ class Density:
             dataclass = DataClass(pos, zs, densities)
             queue.put(dataclass)
             #queue.put(pos, zs, densities)
-            print(multiprocessing.current_process().name, 'Finishing')
+            #print(multiprocessing.current_process().name, 'Finishing')
         
         
         ### Get the closest begin and end frame corresponding to b, e
         bframe, eframe = Frame().frame(u, b, e)
+        #print(bframe, eframe)
         eeframe = bframe + ((eframe - bframe)//cores) * cores
         fs = np.linspace(bframe, eeframe, cores+1, dtype=int)
         print(fs)
@@ -88,6 +89,13 @@ class Density:
         print("Z (nm), density (kg/m^3), std (kg/m^3)")
         
         return np.linspace(0, X/10, num=nbins), average*1000, std*1000 # nm, kg/m3 kg/m3
+
+
+
+    def density_frame(self, u, selection=False, nbins=100):
+        if not selection:
+            print("provide selection i.e. 'resname TIP3'")
+
 
 
 
