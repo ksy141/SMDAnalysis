@@ -85,6 +85,7 @@ class Density:
         Y = np.array([r[2] for r in results]).reshape(-1, nbins)
 
         average, std = Block().block(Y, nblocks)
+        print("Z (nm), density (kg/m^3), std (kg/m^3)")
         
         return np.linspace(0, X/10, num=nbins), average*1000, std*1000 # nm, kg/m3 kg/m3
 
