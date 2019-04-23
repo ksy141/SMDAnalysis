@@ -35,7 +35,7 @@ class Covariance:
         n = 0
         covar = np.zeros((nfeatures, nfeatures))
         aver = np.average(features[:, :, 1], axis=1)
-        print(aver)
+        print("<X> = ", aver)
         while (n + df) < nf:
             X = features[:, n, 1]
             Y = features[:, n + df, 1]
