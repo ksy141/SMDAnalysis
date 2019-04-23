@@ -34,14 +34,15 @@ class Covariance:
         
         n = 0
         covar = np.zeros((nfeatures, nfeatures))
+        aver = np.average(features[:, :, 1], axis=1)
+        print(aver)
         while (n + df) < nf:
             X = features[:, n, 1]
             Y = features[:, n + df, 1]
-            X1 = X - np.average(X)
-            Y1 = Y - np.average(Y)
-            covar += np.outer(X1, Y1)
+            covar += np.outer(X, Y)
             n += 1
         covar /= n
+        covar -= np.outer(aver, aver)
 
         return covar
 
