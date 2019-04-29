@@ -344,7 +344,7 @@ class PackingDefects:
 
 
 
-    def defect_size(self, matrices, nblocks = 5, nbins=500, bin_max=250, density=False, file='defect_histogram.dat'):
+    def defect_size(self, matrices, nblocks = 5, nbins=100, bin_max=2.5, prob=False, file='defect_histogram.dat'):
         nbins += 1
         bins = np.linspace(0, bin_max, nbins)
         dbin = bins[1] - bins[0]
@@ -387,10 +387,10 @@ class PackingDefects:
                 if n not in visited:
                     defect_loc = self._dfs(graph, n)
                     visited = visited.union(defect_loc)
-                    defects.append(len(defect_loc))
+                    defects.append(len(defect_loc) * 0.01) #A2 to nm2
             
-            tmphist, bin_edges = np.histogram(defects, bins=bins, density=density)
-            if density:
+            tmphist, bin_edges = np.histogram(defects, bins=bins, density=prob)
+            if prob:
                 tmphist *= dbin
             hist.append(tmphist)
         
