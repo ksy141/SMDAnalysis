@@ -345,38 +345,62 @@ class PackingDefects:
 
 
     def defect_size(self, matrices, nblocks = 5, nbins=500, bin_max=250, density=False, file='defect_histogram.dat'):
+        nbins += 1
         bins = np.linspace(0, bin_max, nbins)
+        dbin = bins[1] - bins[0]
         num_matrix = len(matrices)
         hist = np.zeros((nblocks, nbins-1))
 
         for matrix in matrices:
             matrix[matrix != 0] = 1
 
-        for i in range(nblocks):
-            start = int(num_matrix/nblocks) * i
-            end   = int(num_matrix/nblocks) * (i+1)
-            period = end - start
-
-            defects = []
-            for matrix in matrices[start:end]:
-                graph = self._make_graph(matrix)
-
-                visited = set([])
-                for n in graph:
-                    if n not in visited:
-                        defect_loc = self._dfs(graph, n)
-                        visited = visited.union(defect_loc)
-                        defects.append(len(defect_loc))
-
-            hist[i], bin_edges = np.histogram(defects, bins=bins, density=density)
+#        for i in range(nblocks):
+#            start = int(num_matrix/nblocks) * i
+#            end   = int(num_matrix/nblocks) * (i+1)
+#            period = end - start
+#
+#            defects = []
+#            for matrix in matrices[start:end]:
+#                graph = self._make_graph(matrix)
+#
+#                visited = set([])
+#                for n in graph:
+#                    if n not in visited:
+#                        defect_loc = self._dfs(graph, n)
+#                        visited = visited.union(defect_loc)
+#                        defects.append(len(defect_loc))
+#
+#            hist[i], bin_edges = np.histogram(defects, bins=bins, density=density)
+#            hist[i] *= dbin
+#       
+#        hist /= period
+#        average = np.average(hist, axis=0)
+#        std = np.std(hist, axis=0)
+#
         
-        hist /= period
+        hist = []
+        for matrix in matrices:
+            defects = []
+            graph = self._make_graph(matrix)
+            visited = set([])
+            for n in graph:
+                if n not in visited:
+                    defect_loc = self._dfs(graph, n)
+                    visited = visited.union(defect_loc)
+                    defects.append(len(defect_loc))
+            
+            tmphist, bin_edges = np.histogram(defects, bins=bins, density=density)
+            if density:
+                tmphist *= dbin
+            hist.append(tmphist)
+        
+        hist    = np.array(hist)
         average = np.average(hist, axis=0)
-        std = np.std(hist, axis=0)
+        std     = np.std(hist, axis=0)
 
         ofile = open(file, 'w')
         for i in range(nbins-1):
-            ofile.write('{: .3f} {: .3f} {: .3f}\n'.format(bins[i], average[i], std[i]))
+            ofile.write('{: .3f} {: .8f} {: .8f}\n'.format(bins[i], average[i], std[i]))
         ofile.close()
 
 
