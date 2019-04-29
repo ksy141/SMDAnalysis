@@ -31,6 +31,7 @@ class Covariance:
             print("adjusting lag time to %.2f ns" %lag)
 
         df = int(Decimal('%f' %lag)//Decimal('%f' %dt))
+        print("df: ", df)
         
         n = 0
         covar = np.zeros((nfeatures, nfeatures))
