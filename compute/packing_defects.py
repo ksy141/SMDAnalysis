@@ -370,8 +370,8 @@ class PackingDefects:
 #                        visited = visited.union(defect_loc)
 #                        defects.append(len(defect_loc))
 #
-#            hist[i], bin_edges = np.histogram(defects, bins=bins, density=density)
-#            hist[i] *= dbin
+#            hist[i], bin_edges = np.histogram(defects, bins=bins, density=prob)
+#            #hist[i] *= dbin
 #       
 #        hist /= period
 #        average = np.average(hist, axis=0)
