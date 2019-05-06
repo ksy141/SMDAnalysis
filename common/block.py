@@ -5,6 +5,7 @@ class Block:
         pass
 
     def block(self, f, nblocks):
+        f = np.array(f)
         f = f[(len(f)%nblocks):]
         sf = np.array(np.split(f, nblocks))
         blocks = np.average(sf, axis=1)
