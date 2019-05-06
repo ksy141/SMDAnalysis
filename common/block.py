@@ -1,6 +1,13 @@
 import numpy as np
 
 class Block:
+    '''
+    input:
+    f = (1,) array or (N,) array or list
+    
+    use:
+    aver, std = smda.Block().block(f, 5)
+    '''
     def __init__(self):
         pass
 

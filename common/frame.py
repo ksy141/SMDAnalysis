@@ -1,6 +1,22 @@
 import numpy as np
 
 class Frame:
+
+    '''
+    input:
+    b = time (ns)
+    e = time (ns)
+    
+    output:
+    bframe = (int) frame corresponding to b (ns)
+    eframe = (int) frame corresponding to e (ns)
+    
+    use:
+    bframe, eframe = smda.Frame().frame(u, b, e)
+    for ts in u.trajectory[bframe, eframe]:
+        DO!
+    '''
+
     def __init__(self):
         pass
 
