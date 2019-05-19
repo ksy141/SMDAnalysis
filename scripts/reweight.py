@@ -65,7 +65,7 @@ def reweight(f = args.f, b = float(args.b), r = int(args.r), cv = int(args.cv), 
     if mintozero:
         F -= F[np.argmin(F)]
 
-    return np.transpose([bins, prob, F])
+    return np.transpose([bins, F, prob])
 
 
 x = reweight()
