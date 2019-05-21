@@ -12,8 +12,8 @@ class COMDistance:
         #Wholemolecules(ag1)
         #Wholemolecules(ag2)
         self.pbc  = ag1.dimensions[0:3]
-        self.cag1 = ag1.center_of_geometry()
-        self.cag2 = ag2.center_of_geometry()
+        self.cag1 = ag1.center_of_mass()
+        self.cag2 = ag2.center_of_mass()
 
     def actual_distance(self, pbc=None):
         dr = self.cag2 - self.cag1

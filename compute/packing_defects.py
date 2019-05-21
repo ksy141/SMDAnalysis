@@ -332,12 +332,20 @@ class PackingDefects:
 
             for dx in [-1, 0, 1]:
                 for dy in [-1, 0, 1]:
-                    if dx * dy == 0:
-                        x = divmod(xi + dx, xis)[1]
-                        y = divmod(yi + dy, yis)[1]
-                        if matrix[x, y] == 1:
-                            ndn = x * yis + y
-                            nlist.append(ndn)
+                    # 8-neighbors
+                    x = divmod(xi + dx, xis)[1]
+                    y = divmod(yi + dy, yis)[1]
+                    if matrix[x, y] == 1:
+                        ndn = x * yis + y
+                        nlist.append(ndn)
+                    
+                   # 4 neighbors
+                   # if dx * dy == 0:
+                   #     x = divmod(xi + dx, xis)[1]
+                   #     y = divmod(yi + dy, yis)[1]
+                   #     if matrix[x, y] == 1:
+                   #         ndn = x * yis + y
+                   #         nlist.append(ndn)
 
             graph[n] = set(nlist) - set([n])
         return graph
