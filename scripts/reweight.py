@@ -1,7 +1,7 @@
 import numpy as np
 import argparse
 
-parser = argparse.ArgumentParser(description='Process some integers.')
+parser = argparse.ArgumentParser(description='Reweight Metadynamics using CV and rbias to get PMF')
 parser.add_argument("-f",     help="filename e.g. colvar", default="colvar")
 parser.add_argument("-b",     help="time to read (ns)", default=0)
 #parser.add_argument("-t",  help="time column", default=1)
