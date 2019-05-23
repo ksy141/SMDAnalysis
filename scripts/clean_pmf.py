@@ -58,7 +58,7 @@ for ifile, zero, kcal in zip(files, zeros, kcals):
     if kcal == 'True':
         pmf[ifile]['y'] *= kj_to_kcal
 
-    ax.plot(pmf[ifile]['x'], pmf[ifile]['y'], label=ifile)
+    ax.plot(pmf[ifile]['x'], pmf[ifile]['y'], label=ifile, lw=3)
 
 if args.x != True:
     ax.set_xlim([float(args.x[0]), float(args.x[1])])
