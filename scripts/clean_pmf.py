@@ -31,7 +31,7 @@ else:
 
 kcal = args.kcal
 if kcal == True:
-    kcals = [True] * len(f)
+    kcals = ['True'] * len(f)
 else:
     kcals = kcal
 
@@ -47,14 +47,15 @@ for ifile, zero, kcal in zip(files, zeros, kcals):
                     delim_whitespace=True, 
                     header=None, 
                     usecols=[0,1], 
-                    comment='#')
+                    comment='#',
+                    engine='python')
     
     pmf[ifile] = {}
     pmf[ifile]['x'] = a[0].values
     pmf[ifile]['y'] = a[1].values
     idx = (np.abs(pmf[ifile]['x'] - zero)).argmin()
     pmf[ifile]['y'] -= pmf[ifile]['y'][idx]
-    if kcal == True:
+    if kcal == 'True':
         pmf[ifile]['y'] *= kj_to_kcal
 
     ax.plot(pmf[ifile]['x'], pmf[ifile]['y'], label=ifile)
