@@ -43,7 +43,7 @@ print("X1={:.5f}  X2={:.5f}".format(cv_avg - FWHM, cv_avg + FWHM))
 fig, ax = plt.subplots(figsize=(7,5))
 ax.plot(x, y, color='black')
 
-if draw: 
+if args.draw: 
     ax.axvline(cv_avg, color='C0')
     ax.axvline(cv_avg - FWHM, color='C0')
     ax.axvline(cv_avg + FWHM, color='C0')
