@@ -47,5 +47,6 @@ if args.draw:
     ax.axvline(cv_avg, color='C0')
     ax.axvline(cv_avg - FWHM, color='C0')
     ax.axvline(cv_avg + FWHM, color='C0')
+plt.show()
 #fig.savefig('histo.pdf')
 
