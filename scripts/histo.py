@@ -23,7 +23,7 @@ parser.set_defaults(nbins=200)
 
 args = parser.parse_args()
 
-cv = np.loadtxt(args.f)[:, int(args.col)]
+cv = np.loadtxt(args.f)[:, int(args.col) - 1]
 cv_equ = cv[int(len(cv) * float(args.frac)):]
 cv_avg = np.average(cv_equ)
 
