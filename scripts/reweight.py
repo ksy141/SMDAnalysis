@@ -3,7 +3,8 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Reweight Metadynamics using CV and rbias to get PMF')
 parser.add_argument("-f",     help="filename e.g. colvar", default="colvar")
-parser.add_argument("-b",     help="time to read (ns)", default=0)
+parser.add_argument("-b",     help="beginning (ns)", default=0)
+parser.add_argument("-e",     help="ending (ns)",    default=100000)
 #parser.add_argument("-t",  help="time column", default=1)
 parser.add_argument("-r",     help="rbias column", default=False)
 parser.add_argument("-cv",    help="cv column", default=False)
@@ -16,7 +17,7 @@ parser.add_argument("-mintozero", help="make min(pmf) = 0", default=False)
 
 args = parser.parse_args()
 
-def reweight(f = args.f, b = float(args.b), r = int(args.r), cv = int(args.cv), T=float(args.T),
+def reweight(f = args.f, b = float(args.b), e = float(args.e), r = int(args.r), cv = int(args.cv), T=float(args.T),
              minbin = float(args.min), maxbin = float(args.max), nbins = int(args.nbins), 
              sigma = float(args.sigma), mintozero = (str(args.mintozero) == 'True')):
 
@@ -37,6 +38,9 @@ def reweight(f = args.f, b = float(args.b), r = int(args.r), cv = int(args.cv), 
         sline = line.split()
         if float(sline[0]) < b * 1000:
             continue
+
+        if float(sline[0]) > e * 1000:
+            break
         
         #if float(sline[0]) == 0:
         #    print(sline)
