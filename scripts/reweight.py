@@ -60,6 +60,8 @@ def reweight(f = args.f, b = float(args.b), r = int(args.r), cv = int(args.cv), 
         prob += gauss * erbias
     
     prob /= np.sum(prob)
+    prob[0]  = prob[1]
+    prob[-1] = prob[-2]
     F = -1/beta * np.log(prob)
 
     if mintozero:
