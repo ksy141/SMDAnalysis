@@ -44,9 +44,9 @@ fig, ax = plt.subplots(figsize=(7,5))
 ax.plot(x, y, color='black')
 
 if args.draw: 
-    ax.axvline(cv_avg, color='C0')
-    ax.axvline(cv_avg - FWHM, color='C0')
-    ax.axvline(cv_avg + FWHM, color='C0')
+    ax.axvline(cv_avg, color='C0', lw=2, linestyle='--')
+    ax.axvline(cv_avg - FWHM, color='C0', lw=2, linestyle='--')
+    ax.axvline(cv_avg + FWHM, color='C0', lw=2, linestyle='--')
 plt.show()
 #fig.savefig('histo.pdf')
 
