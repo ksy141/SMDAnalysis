@@ -7,7 +7,7 @@ class OrderParameters:
     def __init__(self):
         pass
     
-    def compute_OP(self, u, atoms = [], resname = False, add_sel = False, nblocks = 5):
+    def compute_OP(self, u, atoms = [], resname = False, add_sel = False, sel_update = False, nblocks = 5):
         assert isinstance(u, Universe)
         numframes = len(u.trajectory)
         size = numframes/nblocks
@@ -27,9 +27,14 @@ class OrderParameters:
         if add_sel:
             g1 += " and %s" %add_sel
             g2 += " and %s" %add_sel
-
-        group1 = u.select_atoms(g1)
-        group2 = u.select_atoms(g2)
+        
+        if sel_update:
+            group1 = u.select_atoms(g1, updating=True)
+            group2 = u.select_atoms(g2, updating=True)
+        else:
+            group1 = u.select_atoms(g1)
+            group2 = u.select_atoms(g2)
+        
         
         blocks = []
         for block in range(nblocks):
