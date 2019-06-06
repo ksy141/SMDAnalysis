@@ -34,7 +34,7 @@ def sort_rmsd(f, r, pdbs, add, num, out):
             
             except:
                 for i in range(len(sline)):
-                    if sline[i] == 'total_score':
+                    if sline[i] == 'total_score' or 'score':
                         score_col = i
                         print("score_col (0-based): ", i)
                     elif sline[i] == 'description':

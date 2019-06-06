@@ -14,7 +14,7 @@ parser.add_argument("-max",   help="max in cv", default=+0.5)
 parser.add_argument("-nbins", help="nbins in cv", default=100)
 parser.add_argument("-sigma", help="sigma in gauss", default=0.001)
 parser.add_argument("-mintozero", help="make min(pmf) = 0", default=False)
-
+parser.add_argument("-filename", help="filename", default='reweight')
 args = parser.parse_args()
 
 def reweight(f = args.f, b = float(args.b), e = float(args.e), r = int(args.r), cv = int(args.cv), T=float(args.T),
@@ -75,5 +75,5 @@ def reweight(f = args.f, b = float(args.b), e = float(args.e), r = int(args.r), 
 
 
 x = reweight()
-np.savetxt('reweight', x)
+np.savetxt(args.filename, x)
 
