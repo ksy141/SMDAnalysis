@@ -13,13 +13,13 @@ parser.add_argument("-f",     help="filename e.g. score.fsc", default="score.fsc
 parser.add_argument("-pdbs",  help="path for pdbs", default="./")
 parser.add_argument("-r",     help="rmsd w.r.t. r th best structure (1-based)", default = 1)
 parser.add_argument("-add",   help="adding selection: protein and name CA and ???", default = '')
-parser.add_argument("-num",   help="number of pdb files to be plotted. Default=1/10 of total pdb files", default=None)
+parser.add_argument("-num",   help="number of pdb files to be plotted. Default=1/10 of total pdb files", default=0)
 parser.add_argument("-o",     help="output score-rmsd figure name", default="score-rmsd.pdf")
 
 def sort_rmsd(f, r, pdbs, add, num, out):
     scores = []
-    score_col = None
-    descr_col = None
+    score_col = False
+    descr_col = False
     if add:
         add = ' and ' + add
 
@@ -27,14 +27,14 @@ def sort_rmsd(f, r, pdbs, add, num, out):
         if line.startswith('SCORE'):
             sline = line.split()
 
-            try:
+            if score_col:
                 score = float(sline[score_col])
                 descr = sline[descr_col]
                 scores.append((score, descr))
             
-            except:
+            else:
                 for i in range(len(sline)):
-                    if sline[i] == 'total_score' or 'score':
+                    if sline[i] == 'total_score' or sline[i] == 'score':
                         score_col = i
                         print("score_col (0-based): ", i)
                     elif sline[i] == 'description':
@@ -52,11 +52,12 @@ def sort_rmsd(f, r, pdbs, add, num, out):
     d0 = scores[r-1][1]
     ref = mda.Universe(pdbs + d0 + '.pdb')
     check = 0
-
-    if num == 'None':
+    
+    if int(num) == 0:
         num = int(len(scores)/10)
     else:
         num = int(num)
+    print("num: ", num)
 
     for score in scores[0:num]:
         s = score[0]
