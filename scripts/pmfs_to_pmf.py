@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
-kj_to_kcal = 0.239006 
+import matplotlib as mpl
+mpl.use('TkAgg')
+import matplotlib.pyplot as plt
+
+kj_to_kcal = 0.239006
 
 import argparse
 parser = argparse.ArgumentParser(description='')
@@ -36,19 +40,22 @@ pmf  = {}
 pmfs = []
 files = f
 print(files)
-fig, ax = plt.subplots()
 
 for ifile, zero, kcal in zip(files, zeros, kcals):
-    a = pd.read_csv(ifile, 
-                    delim_whitespace=True, 
-                    header=None, 
-                    usecols=[0,1], 
+    a = pd.read_csv(ifile,
+                    delim_whitespace=True,
+                    header=None,
+                    usecols=[0,1],
                     comment='#',
                     engine='python')
-    
+
     pmf[ifile] = {}
     pmf[ifile]['x'] = a[0].values
     pmf[ifile]['y'] = a[1].values
+
+    if (pmf[ifile]['x'][0] > 0) and (pmf[ifile]['x'][-1]):
+        pmf[ifile]['x'] *= -1
+
     idx = (np.abs(pmf[ifile]['x'] - zero)).argmin()
     pmf[ifile]['y'] -= pmf[ifile]['y'][idx]
     if kcal == 'True':
@@ -62,15 +69,9 @@ average = np.average(pmfs, axis=0)
 std     = np.std(pmfs, axis=0)
 np.savetxt(output, np.transpose([x, average, std, average-std, average+std]))
 
-
-
-
-
-
-
-
-
-
-
-
-
+d = np.loadtxt(output)
+fig, ax = plt.subplots()
+ax.plot(d[:,0], d[:,1], color='C0')
+ax.fill_between(d[:,0], d[:,3], d[:,4], color='C0', alpha=0.4)
+fig.tight_layout()
+fig.savefig(output + '.pdf')
