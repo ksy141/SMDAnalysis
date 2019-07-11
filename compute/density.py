@@ -40,22 +40,11 @@ class Density:
         zs = []
         densities = []
         for ts in u.trajectory[bframe:eframe]:
+            pbcx, pbcy, pbcz = u.dimensions[0:3]
+            d = self.density_frame(pbcx, pbcy, pbcz, nbins, group.positions, masses)
         
-            density = np.zeros(nbins, dtype=np.double)
-            
-            x, y, z = u.dimensions[0:3]
-            dz = z/nbins
-            zs.append(z)
-        
-            vecs = group.positions[:,2]/z
-            vecs -= np.floor(vecs)
-            indices = np.digitize(vecs, np.linspace(0, 1, nbins))
-            
-            density = density_help.density_help(indices, masses, density)
-            density[0] = density[1]
-            
-            density /= x * y * dz * 0.602214
-            densities.append(density)
+            zs.append(pbcz)
+            densities.append(d)
         
         X = np.linspace(0, np.average(zs), num=nbins)
         X /= 10
@@ -68,4 +57,16 @@ class Density:
         return X, average*1000, std*1000 # nm, kg/m3 kg/m3
 
 
+    def density_frame(self, pbcx, pbcy, pbcz, nbins, positions, masses):
+        density = np.zeros(nbins, dtype = np.double)
+        dz = pbcz/nbins
+        vecs = positions[:,2]/pbcz
+        vecs -= np.floor(vecs)
+        indices = np.digitize(vecs, np.linspace(0, 1, nbins))
+
+        density = density_help.density_help(indices, masses, density)
+        density[0] = density[1]
+        density /= pbcx * pbcy * dz * 0.602214
+        
+        return density
 
