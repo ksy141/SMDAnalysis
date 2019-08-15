@@ -12,11 +12,13 @@ parser.add_argument("-f",    nargs='+', help="filenames e.g. fes_*.dat")
 parser.add_argument("-o",    help="output filename default=pmf")
 parser.add_argument("-zero", nargs='*', help="where to make it zero: default=-0.5")
 parser.add_argument("-kcal", nargs='*', help="convert it to kcal e.g. True True False default: True True True")
+parser.add_argument("-std",  help="whether include std or not default=True")
 
 parser.set_defaults(zero=True)
 parser.set_defaults(kcal=True)
 parser.set_defaults(x=True)
 parser.set_defaults(y=True)
+parser.set_defaults(std=True)
 parser.set_defaults(o='pmf')
 
 args = parser.parse_args()
@@ -67,7 +69,11 @@ for ifile, zero, kcal in zip(files, zeros, kcals):
 
 average = np.average(pmfs, axis=0)
 std     = np.std(pmfs, axis=0)
-np.savetxt(output, np.transpose([x, average, std, average-std, average+std]))
+
+if args.std == True:
+    np.savetxt(output, np.transpose([x, average, std, average-std, average+std]), fmt='%6.3f')
+else:
+    np.savetxt(output, np.transpose([x, average]), fmt='%6.3f')
 
 d = np.loadtxt(output)
 fig, ax = plt.subplots()
