@@ -70,14 +70,16 @@ for ifile, zero, kcal in zip(files, zeros, kcals):
 average = np.average(pmfs, axis=0)
 std     = np.std(pmfs, axis=0)
 
-if args.std == True:
-    np.savetxt(output, np.transpose([x, average, std, average-std, average+std]), fmt='%6.3f')
-else:
-    np.savetxt(output, np.transpose([x, average]), fmt='%6.3f')
 
+np.savetxt(output, np.transpose([x, average, std, average-std, average+std]), fmt='%6.3f')
 d = np.loadtxt(output)
 fig, ax = plt.subplots()
 ax.plot(d[:,0], d[:,1], color='C0')
 ax.fill_between(d[:,0], d[:,3], d[:,4], color='C0', alpha=0.4)
 fig.tight_layout()
 fig.savefig(output + '.pdf')
+
+
+if args.std != True:
+    np.savetxt(output, np.transpose([x, average]), fmt='%7.3f')
+
