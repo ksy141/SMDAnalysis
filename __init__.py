@@ -10,8 +10,8 @@ from .common.units import *
 from .common.wholemolecules import Wholemolecules
 from .compute.packing_defects import PackingDefects
 from .compute.order_parameter import OrderParameters
-from .compute.density_help import density_help
-from .compute.density import Density
+# from .compute.density_help import density_help
+# from .compute.density import Density
 from .compute.old_density import OldDensity
 from .compute.membrane import Membrane
 from .compute.coord import Coord
