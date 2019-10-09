@@ -12,19 +12,16 @@ parser.add_argument("-f",    nargs='+', help="filenames e.g. fes_*.dat")
 parser.add_argument("-o",    help="output filename default=pmf")
 parser.add_argument("-zero", nargs='*', help="where to make it zero: default=-0.5")
 parser.add_argument("-kcal", nargs='*', help="convert it to kcal e.g. True True False default: True True True")
-parser.add_argument("-std",  help="whether include std or not default=True")
-parser.add_argument("-sym",  help="symmetrize pmf default=False")
+parser.add_argument("--nostd", help="do not include std", action="store_true")
+parser.add_argument("--sym",   help="symmetrize pmf", action="store_true")
         
 parser.set_defaults(zero=True)
 parser.set_defaults(kcal=True)
 parser.set_defaults(x=True)
 parser.set_defaults(y=True)
-parser.set_defaults(std=True)
-parser.set_defaults(sym=False)
 parser.set_defaults(o='pmf')
 
 args = parser.parse_args()
-# print(type(args.sym))
 output = args.o
 f = args.f
 zero = args.zero
@@ -72,9 +69,9 @@ for ifile, zero, kcal in zip(files, zeros, kcals):
 average = np.average(pmfs, axis=0)
 std     = np.std(pmfs, axis=0)
 
-if args.sym == 'True':
+if args.sym:
     average = (average + average[::-1])/2
-    args.std = 'False'
+    args.nostd = True
 
 np.savetxt(output, np.transpose([x, average, std, average-std, average+std]), fmt='%7.3f')
 d = np.loadtxt(output)
@@ -84,7 +81,6 @@ ax.fill_between(d[:,0], d[:,3], d[:,4], color='C0', alpha=0.4)
 fig.tight_layout()
 fig.savefig(output + '.pdf')
 
-
-if args.std != 'True':
+if args.nostd:
     np.savetxt(output, np.transpose([x, average]), fmt='%7.3f')
 
