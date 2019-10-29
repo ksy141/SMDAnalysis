@@ -18,6 +18,7 @@ class Coord:
         for ts in self.u.trajectory[bframe:eframe+1:skip]:
             times.append(ts.time/1000)
             d = distance_array(ag1.positions, ag2.positions, box=self.u.dimensions, backend=backend)/10
+            d[ d < d0 ] = 1
             D = (d - d0)/r0
             sij = (1 - np.power(D, nn))/(1 - np.power(D, mm))
             coords.append(np.sum(sij))
