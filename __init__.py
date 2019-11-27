@@ -19,6 +19,7 @@ from .compute.coord import Coord
 from .compute.dihedral import Dihedral
 from .common.covariance import Covariance
 
+
 # THIS WILL WORK IF I DO
 # from SMDAnalysis import *
 __all__ = ['common', 'compute']
