@@ -1,246 +1,167 @@
-from __future__ import print_function
 import numpy as np
 import os
 import glob
 import re
-import subprocess
-import shutil
 import pandas as pd
+import shutil
+import subprocess
+
+import matplotlib as mpl
+mpl.use('TkAgg')
 import matplotlib.pyplot as plt
+
+### HOW TO USE?
+#import SMDAnalysis as smda
+#a = smda.REUS_Analysis()
+#a.get_data()
+#a.get_prob(b=3)
+#a.get_pmf(b=3)
 
 
 class REUS_Analysis:
-    def __init__(self, paraent_directory):
+    def __init__(self):
+        pass
+
+    def get_data(self, directory = "./", plumed = "plumed.*", colvar="colvar.", nopbc = True):
         data = []
-        os.chdir(paraent_directory)
-        for file in glob.glob("plumed1.*"):
-
-            i = int(file.split('.')[1])
-
-            for line in open(file):
-                # FIND KAPPA IN PLUMED FILE
-                if re.search("KAPPA=", line):
-                    sl = line.split()
-                    for s in sl:
-                        if re.search("KAPPA", s):
-                            spring_constant = float(s.split("=")[1])
-
-                # FIND AT IN PLUMED FILE
-                if re.search("AT=", line):
-                    sl = line.split()
-                    for s in sl:
-                        if re.search("AT", s):
-                            at = round(float(s.split("=")[1]), 3)
-
-
-            # READ COLVAR
-            df = pd.read_csv("colvar.{}".format(i), delim_whitespace=True, header=None, usecols=[0,1], comment='#')
-
-            # ADD ALL DATA TO data
-            data.append({"at": at, "spring_constant": spring_constant, "colvar": df.values})
-
-        # SORT USING the key AT
-        self.data   = sorted(data, key=lambda k: k['at'])
-        self.min_at = self.data[0]['at']
-        self.max_at = self.data[-1]['at']
-
-
-        ### CONSIDER PBC
-        for each in self.data:
-            colvar = each["colvar"]
-
-            for i in range(len(colvar)):
-                x = colvar[i][0]
-                y = colvar[i][1]
-                yf = each["at"]
-
-                ysize = 1
-                dy = y - yf
-                dy -= ysize * int(round(dy * ysize))
-                y = yf + dy
-
-                colvar[i][1] = y
-
-
-
-    def __repr__(self):
-        ats = []
-        scs = []
-
-        for each in self.data:
-            ats.append(str(each["at"]))
-            scs.append(str(each["spring_constant"]))
-
-        at = ", ".join(ats)
-        sc = ", ".join(scs)
-        nwins = len(self.data)
-
-        return "NUMBER OF WINDOWS: {}\n AT: {}\n SPRING_CONSTANTS: {}".format(nwins, at, sc)
-
-
-    # def _get_histogram(self, data, min_value, max_value, nbins):
-    #   x = np.linspace(min_value, max_value, nbins)
-    #   y = np.zeros(nbins)
-
-    #   for value in data:
-    #       i = int((value - min_value)*nbins/(max_value-min_value))
-    #       y[i] += 1
-    #   y /= len(data)
-
-    #   return np.stack((x,y), axis = -1)
-
-
-    def comp_prob(self, min_value, max_value, nbins):
-        bins = np.linspace(min_value, max_value, nbins+1)
-        for each in self.data:
-            colvar = each["colvar"]
-            read_start = int(len(colvar) * 0.2)
-            read = colvar[read_start:]
-            y, x = np.histogram(read[:,1], bins=bins)
-            y = y/len(read)
-            x = x[1:]
-            each["prob"] = np.stack((x,y), axis=-1)
-            # each["prob"][:,0] vs each["prob"][:,1]
-        self.save_prob()
-
-
-    def save_prob(self):
-        for each in self.data:
-            x = each["prob"][:,0]
-            y = each["prob"][:,1]
-            plt.plot(x, y, label=str(each["at"]))
-        plt.legend()
-        plt.savefig('prob.png')
-
-    def plot_prob(self):
-        for each in self.data:
-            x = each["prob"][:,0]
-            y = each["prob"][:,1]
-            plt.plot(x, y, label=str(each["at"]))
-        plt.legend()
-        plt.show()
-
-    def comp_re(self, min_value, max_value, nbins, nblocks=5, cut=0.08):
-        bins = np.linspace(min_value, max_value, nbins+1)
-
-        for each in self.data:
-            colvar = each["colvar"]
-            g = np.histogram(colvar[:,1], bins=bins)[0] / len(colvar)
-
-            re = []
-
-            for n in range(nblocks):
-                start = n/nblocks
-                end = (n+1)/nblocks
-                read_start = int(len(colvar) * start)
-                read_end = int(len(colvar) * end)
-                read = colvar[read_start:read_end]
-
-                f = np.histogram(read[:,1], bins = bins)[0] / len(read)
-
-                f_g = np.zeros(nbins)
-                for i in range(nbins):
-                    if g[i] == 0:
-                        f_g[i] = 1
-                    elif f[i] == 0:
-                        #f[i] = 1/len(read)
-                        f_g[i] = 1/len(read)/g[i]
-                    else:
-                        f_g[i] = f[i]/g[i]
-
-                re.append(f @ np.log(f_g))
-
-            each["re"] = re
-
-
-        for each in self.data:
-            for val in each["re"]:
-                if val > cut:
-                    p = ""
-                    for val in each["re"]:
-                        p += "{: 2.3f}  ".format(val)
-                    print("AT {: 2.3f}: {}".format(each["at"], p))
-                    break
-
-
-    def make_metadata(self, prefix='./'):
-        file = open(prefix + 'metadata.dat', 'w')
-        for each in self.data:
-            file.write('{} {} {}\n'.format('Z' + str(each["at"]) + "/colvar", each["at"], each["spring_constant"]))
-        file.close()
-
-
-    def errors(self, nblocks=5):
-        shutil.rmtree('errors', ignore_errors=True)
-        os.makedirs('errors')
-
-        for each in self.data:
-            colvar = each["colvar"]
-
-            for n in range(nblocks):
-                start = n/nblocks
-                end = (n+1)/nblocks
-                read_start = int(len(colvar) * start)
-                read_end = int(len(colvar) * end)
-                read = colvar[read_start:read_end]
-
-                file = open('errors/col{}_{}'.format(each["at"], n), 'w')
-
-                for values in read:
-                    x  = values[0]
-                    y  = values[1]
-
-                    # yf = each["at"]
-                    # ysize = 1
-                    # dy = y - yf
-                    # dy -= ysize * int(round(dy * ysize))
-                    # y = yf + dy
-
-                    file.write('{: 2.4f} {: 2.4f}\n'.format(x, y))
-                file.close()
-
-
-        for n in range(nblocks):
-            file = open('errors/metadata{}.dat'.format(n), 'w')
-            for each in self.data:
-                file.write('col{}_{} {} {}\n'.format(each["at"], n, each["at"], each["spring_constant"]))
-            file.close()
-
-
-        file = open('errors/run.sh', 'w')
-        for n in range(nblocks):
-            file.write('wham {} {} 100 1e-10 310 0 metadata{}.dat pmf{}.dat\n'.format(self.min_at, self.max_at, n, n))
-        file.close()
-
-
-
-    def add(self, AT, spring_constant):
-        file = open('add_simulation.sh', 'w')
-        file.write('''#!/bin/bash
-cp -r template Z{}
-cp eq/step7.gro Z{}
-cd Z{}
-sed -i.bak 's/_AT/{}/' run_md1.sub
-sed -i.bak 's/_AT/{}/' run_md2.sub
-sed -i.bak 's/_KAPPA/{}/' plumed1.dat
-sed -i.bak 's/_KAPPA/{}/' plumed2.dat
-sed -i.bak 's/_AT/{}/' plumed1.dat
-sed -i.bak 's/_AT/{}/' plumed2.dat
-rm -rf *.bak
-cd ..
-'''.format(AT, AT, AT, AT, AT, spring_constant, spring_constant, AT, AT))
-        file.close()
-
-        subprocess.call(['bash', 'add_simulation.sh'])
-        subprocess.call(['rm', '-rf', 'add_simulation.sh'])
-
-
-
-
-
-
-
-
-
-
-
+        os.chdir(directory)
+        plumed_files = glob.glob(plumed)
+
+        for ifile in plumed_files:
+            index = int(ifile.split('.')[1])
+
+            with open(ifile) as f:
+                for line in f:
+                    if re.search("RESTRAINT", line):
+                        kappa = self._get_info('KAPPA=', line)
+                        at = self._get_info('AT=', line)
+                        at = round(at, 3)
+
+            ### pd.read_csv() is much faster than np.loadtxt()
+            df = pd.read_csv(colvar + str(index), 
+                             delim_whitespace = True, 
+                             header = None, 
+                             comment='#', 
+                             usecols=[0,1])
+
+            if nopbc:
+                cols = df.values
+                dy = cols[:,1] - at
+                dy -= np.around(dy)
+                cols[:,1] = at + dy
+
+            else:
+                cols = df.values
+
+            data.append({'at': at, 'kappa': kappa, 'colvar': cols})
+
+        self.data = sorted(data, key=lambda k: k['at'])
+        self.at_min = self.data[0]['at']
+        self.at_max = self.data[-1]['at']
+        self.t_min  = self.data[0]['colvar'][:,0][0]/1000
+        self.t_max  = self.data[0]['colvar'][:,0][-1]/1000
+
+    
+    def get_prob(self, b = 0, e = 100000, 
+                 at_min = -0.6, at_max = 0.6, nbins = 100):
+
+        assert b < self.t_max, "b > t_max, no data to analyze!"
+
+        if e > self.t_max:
+            e = self.t_max
+        
+        count_settings = {'bins': nbins, 'range': (at_min, at_max)}
+
+        b *= 1000 # ns to ps
+        e *= 1000 # ns to ps
+
+        _, edges = np.histogram([-100000], **count_settings)
+        bins = 0.5 * (edges[1:] + edges[:-1])
+        print(bins)
+        print(len(bins))
+        fig, ax = plt.subplots()
+
+        for w in self.data:
+            cols = w['colvar']
+
+            c = cols[(cols[:,0] >= b) & (cols[:,0] <= e)]
+            count, _ = np.histogram(c[:,1], **count_settings, density=True)
+            ax.plot(bins, count, label=w['at'])
+        
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig('prob.pdf')
+
+
+    def get_pmf(self, b = 0, e = 100000, nblocks = 5,
+                T = 310, nbins = 100, tol = 1e-10,
+                idx_zero = 0):
+
+
+        assert b < self.t_max, "b > t_max, no data to analyze!"
+
+        if e > self.t_max:
+            e = self.t_max
+
+        b *= 1000
+        e *= 1000
+        ts = np.linspace(b, e, nblocks + 1)
+        
+        ### MAKE PMFS folder
+        shutil.rmtree('pmfs', ignore_errors=True)
+        os.makedirs('pmfs')
+        
+
+        ### OUTPUT col
+        for w in self.data:
+            cols = w['colvar']
+
+            for i in range(nblocks):
+                c = cols[(cols[:,0] >= ts[i]) & (cols[:,0] < ts[i+1])]
+                np.savetxt('pmfs/col{}_{}'.format(w['at'], i), c)
+        
+
+        ### OUTPUT METADATA
+        runfile = open('pmfs/run.sh', 'w')
+        for i in range(nblocks):
+            runfile.write('wham {} {} {} {} {} 0 metadata{}.dat pmf{}.dat\n'.format(\
+                    self.at_min, self.at_max, nbins, tol, T, i, i))
+
+            mfile = open('pmfs/metadata{}.dat'.format(i), 'w')
+            for w in self.data:
+                mfile.write('col{}_{} {} {}\n'.format(w['at'], i, w['at'], w['kappa']))
+            mfile.close()
+        runfile.close()
+        
+        ### RUN WHAM
+        os.chdir('pmfs')
+        subprocess.call(['bash', 'run.sh'])
+
+        ### BLOCK AVERAGE
+        pmfs = []
+        for i in range(nblocks):
+            p = np.loadtxt('pmf{}.dat'.format(i))
+            x = p[:,0]
+            y = p[:,1]
+            y -= y[idx_zero]
+            y *= 0.239 # kj to kcal
+            pmfs.append(y)
+        pmfs = np.array(pmfs)
+        ave = np.average(pmfs, axis=0)
+        std = np.std(pmfs, axis = 0)
+        np.savetxt('pmf', np.transpose([x, ave, std, ave - std, ave + std]))
+        
+        ### PLOT
+        fig, ax = plt.subplots()
+        ax.plot(x, ave, color='C0')
+        ax.fill_between(x, ave - std, ave + std, color='C0', alpha=0.4)
+        fig.tight_layout()
+        fig.savefig('pmf.pdf')
+        
+        os.chdir('../')
+
+
+
+    def _get_info(self, string, line):
+        _, __, interest = line.partition(string)
+        return float(interest.split()[0])

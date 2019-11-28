@@ -18,7 +18,7 @@ from .compute.membrane import Membrane
 from .compute.coord import Coord
 from .compute.dihedral import Dihedral
 from .common.covariance import Covariance
-
+from .scripts.reus_analysis import REUS_Analysis
 
 # THIS WILL WORK IF I DO
 # from SMDAnalysis import *
