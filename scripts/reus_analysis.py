@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 #import SMDAnalysis as smda
 #a = smda.REUS_Analysis()
 #a.get_data()
-#a.get_prob(b=3)
-#a.get_pmf(b=3)
+#a.get_prob(b=30)
+#a.get_pmfs(b=30)
 
 
 class REUS_Analysis:
@@ -93,9 +93,9 @@ class REUS_Analysis:
         fig.savefig('prob.pdf')
 
 
-    def get_pmf(self, b = 0, e = 100000, nblocks = 5,
-                T = 310, nbins = 100, tol = 1e-10,
-                idx_zero = 0):
+    def get_pmfs(self, b = 0, e = 100000, nblocks = 5,
+                 T = 310, nbins = 100, tol = 1e-10,
+                 idx_zero = 0):
 
 
         assert b < self.t_max, "b > t_max, no data to analyze!"
