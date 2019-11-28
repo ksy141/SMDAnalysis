@@ -70,6 +70,8 @@ class REUS_Analysis:
         if e > self.t_max:
             e = self.t_max
         
+        print('getting data from {} ns to {} to compute prob'.format(b, e))
+        
         count_settings = {'bins': nbins, 'range': (at_min, at_max)}
 
         b *= 1000 # ns to ps
@@ -77,8 +79,6 @@ class REUS_Analysis:
 
         _, edges = np.histogram([-100000], **count_settings)
         bins = 0.5 * (edges[1:] + edges[:-1])
-        print(bins)
-        print(len(bins))
         fig, ax = plt.subplots()
 
         for w in self.data:
@@ -102,6 +102,8 @@ class REUS_Analysis:
 
         if e > self.t_max:
             e = self.t_max
+
+        print('getting data from {} ns to {} to compute pmfs'.format(b, e))
 
         b *= 1000
         e *= 1000
