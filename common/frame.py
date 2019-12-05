@@ -51,7 +51,7 @@ class Frame:
         ## Not correct(?)
         #bframe = int((b*1000 - sb)/(se-sb) * sf)
         #eframe = int((e*1000 - sb)/(se-sb) * sf)
-        return bframe, eframe
+        return bframe, eframe+1
 
 
  

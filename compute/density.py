@@ -35,7 +35,7 @@ class Density:
         ### Get the closest begin and end frame corresponding to b, e
         bframe, eframe = Frame().frame(u, b, e)
         print("frame starts at: %d" %bframe)
-        print("frame ends   at: %d" %eframe)
+        print("frame ends   at: %d" %(eframe-1))
         
         zs = []
         densities = []
