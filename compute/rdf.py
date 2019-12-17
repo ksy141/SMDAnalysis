@@ -8,7 +8,7 @@ from ..common.frame import Frame
 
 class RDF:
     def __init__(self, g1, g2,
-                 nbins=75, range=(0.0, 1.5),
+                 nbins=75, limits=(0.0, 1.5),
                  b=0, e=100000, skip=1,
                  serial=True,
                  nblocks = 5):
@@ -20,7 +20,7 @@ class RDF:
         self.g2 = g2
         self.u  = g1.universe
 
-        self.rdf_settings = {'bins': nbins, 'range': range}
+        self.rdf_settings = {'bins': nbins, 'range': limits}
         
         if serial:
             bframe, eframe = Frame().frame(self.u, b, e)
@@ -63,9 +63,9 @@ class RDF:
             nframes += 1
         
         print("total %d frames" %nframes)
-        aver, std = Block().block(rdfs, self.nblocks)
+        avg, std = Block().block(rdfs, self.nblocks)
         
-        return bins, aver, std
+        return np.transpose([bins, avg, std])
 
 
     def run2d(self):
@@ -99,9 +99,9 @@ class RDF:
             nframes += 1
         
         print("total %d frames" %nframes)
-        aver, std = Block().block(rdfs, self.nblocks)
+        avg, std = Block().block(rdfs, self.nblocks)
 
-        return bins, aver, std
+        return np.transpose([bins, avg, std])
 
 
 

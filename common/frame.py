@@ -29,6 +29,11 @@ class Frame:
         if sb > b*1000: b = sb/1000
         assert b  <= e,  "b > e"
         assert b  <= se, "b > se"
+
+        if int(u.trajectory[0].time) != 0:
+            b -= u.trajectory[0].time / 1000
+            e -= u.trajectory[0].time / 1000
+            
         
         bframe = int(b/dt)
         eframe = int(e/dt)

@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division, print_function
-from ..common.traj_to_numpy import TrajectoryToNumpy
 from ..common.block import Block
 from ..common.frame import Frame
 from MDAnalysis import Universe
@@ -28,9 +27,16 @@ class OrderParameters:
             
             Cs.append(atoms[0])
             Hs.append(atoms[1:])
-            repeat.append(len(atoms)-1)
+            repeat.append(len(atoms)-1) ## How many hydrogen atoms per center atom
+
 
         Hs_f = [item for sublist in Hs for item in sublist]
+        assert int(np.sum(repeat)) == len(Hs_f), "wrong in repeats"
+        ## Cs =   [C31, C32, C33, ..., C318]
+        ## Hs =   [[O31, O32], [H2X, H2Y], [H3X, H3Y], ... [H18X, H18Y, H18Z]]
+        ## Hs_f = [O31, O32, H2X, H2Y, H3X, ... , H18Z]
+        ## repeat = [2, 2, 2, ..., 3]
+
         g1 = "resname %s" %resname + " and name " + " ".join(Cs)
         g2 = "resname %s" %resname + " and name " + " ".join(Hs_f)
         if add_sel:
@@ -45,9 +51,9 @@ class OrderParameters:
             group1 = u.select_atoms(g1)
             group2 = u.select_atoms(g2)
         
-        natoms       = len(Cs)
-        nmols        = int(len(group1.positions)/natoms)
-        repeats      = repeat * nmols
+        natoms       = len(Cs) ## How many center atoms
+        nmols        = int(len(group1.positions)/natoms) ## How many molecules
+        repeats      = repeat * nmols ## [2, 2, 2, ..., 3, | 2, 2, 2, ..., 3, | ...]
         splits       = np.cumsum(repeats)
 
         print('# of mols: %d' %nmols)
@@ -63,16 +69,21 @@ class OrderParameters:
             norm = np.sqrt(np.sum(np.power(dp, 2), axis=-1))
             cos_theta = dp[...,2]/norm
             S = -0.5 * (3 * np.square(cos_theta) - 1)
-            out = np.split(S, splits)
+            # out = np.split(S, splits)
 
-            results = []
-            for mol in range(nmols):
-                each_mol = []
-                for i in range(natoms):
-                    index = mol*natoms + i
-                    each_mol.append(np.average(out[index]))
-                results.append(each_mol)
-            output.append(np.average(results, axis=0))
+            new_S = self._repeat(S, repeats)
+            new_S.shape = (nmols, natoms)
+            results = np.average(new_S, axis=0)
+            output.append(results)
+     
+            #results = []
+            #for mol in range(nmols):
+            #    each_mol = []
+            #    for i in range(natoms):
+            #        index = mol*natoms + i
+            #        each_mol.append(np.average(out[index]))
+            #    results.append(each_mol)
+            #output.append(np.average(results, axis=0))
         
         avg, std = Block().block(output, nblocks)
 
@@ -90,24 +101,24 @@ class OrderParameters:
         order_param = np.average(S)
         return order_param
  
+    
+    def _repeat(self, x, reps):
+        ''' 
+        x = [1, 3, 5, 7, 9]
+        reps = [2, 2, 1]
+        out = [2, 6, 9]
+        '''
+        assert len(x) == int(np.sum(reps)), 'repeats wrong'
+
+        i = 0
+        out = []
+        for rep in reps:
+            tmp = []
+            for r in range(rep):
+                tmp.append(x[i])
+                i += 1
+            out.append(np.average(tmp))
+    
+        return np.array(out)
 
 
-
-
-
-
-
-
-
-            
-
-
-
-
-
-
-
-
-
-
- 
