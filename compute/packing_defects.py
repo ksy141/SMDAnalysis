@@ -17,7 +17,7 @@ class PackingDefects:
         self.heads, self.glycerols, self.tails = self._selection()
         self.trios = list(set(u.select_atoms("resname TRIO").names))
         self.membranes = u.select_atoms("resname POPC DOPE SAPI TRIO")
-        self.c22s = u.select_atoms("name C22 and resname POPC DOPE SAPI")
+        self.c22s = u.select_atoms("name C2 and resname POPC DOPE SAPI")
         self.proteins = u.select_atoms("protein")
         self.dx = self.dy = 1
         self.dz = 0.1

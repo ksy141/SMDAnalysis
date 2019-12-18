@@ -8,6 +8,7 @@ from .common.pbc import PBC
 from .common.traj_to_numpy import TrajectoryToNumpy
 from .common.units import *
 from .common.wholemolecules import Wholemolecules
+from .common.cluster import Cluster
 from .compute.packing_defects import PackingDefects
 from .compute.order_parameter import OrderParameters
 from .compute.rdf import RDF
