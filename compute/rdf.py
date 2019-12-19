@@ -57,6 +57,7 @@ class RDF:
             
             count = np.histogram(d, **self.rdf_settings)[0]  
             count = count.astype(np.float64)
+            count[0] = 0 # avoid self counting
             rdf = count / density / shell_vol
 
             rdfs.append(rdf)
@@ -93,6 +94,7 @@ class RDF:
             d = distance_array(g1_pos, g2_pos, box=self.u.dimensions)/10
             count = np.histogram(d, **self.rdf_settings)[0]
             count = count.astype(np.float64)
+            count[0] = 0
             rdf = count / density / shell_vol
 
             rdfs.append(rdf)
