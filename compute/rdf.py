@@ -16,11 +16,17 @@ class RDF:
         assert isinstance(g1, AtomGroup)
         assert isinstance(g2, AtomGroup)
         
+        if g1 == g2:
+            self.self_rdf = True
+        else:
+            self.self_rdf = False
+
         self.g1 = g1
         self.g2 = g2
         self.u  = g1.universe
 
         self.rdf_settings = {'bins': nbins, 'range': limits}
+        self.rmax = limits[1]
         
         if serial:
             bframe, eframe = Frame().frame(self.u, b, e)
@@ -52,12 +58,15 @@ class RDF:
 
             vol = ts.volume / np.power(10, 3)
             density = N / vol
-
-            d = distance_array(self.g1.positions, self.g2.positions, box=self.u.dimensions)/10
+            
+            if self.self_rdf:
+                d = distance_array(self.g1.positions, self.g2.positions, box=self.u.dimensions)/10
+                np.fill_diagonal(d, self.rmax + 1)
+            else:
+                d = distance_array(self.g1.positions, self.g2.positions, box=self.u.dimensions)/10
             
             count = np.histogram(d, **self.rdf_settings)[0]  
             count = count.astype(np.float64)
-            count[0] = 0 # avoid self counting
             rdf = count / density / shell_vol
 
             rdfs.append(rdf)
@@ -91,10 +100,14 @@ class RDF:
             g2_pos = self.g2.positions
             g2_pos[:,2] = 0.0
             
-            d = distance_array(g1_pos, g2_pos, box=self.u.dimensions)/10
+            if self.self_rdf:
+                d = distance_array(g1_pos, g2_pos, box=self.u.dimensions)/10
+                np.fill_diagonal(d, self.rmax + 1)
+            else:
+                d = distance_array(g1_pos, g2_pos, box=self.u.dimensions)/10
+             
             count = np.histogram(d, **self.rdf_settings)[0]
             count = count.astype(np.float64)
-            count[0] = 0
             rdf = count / density / shell_vol
 
             rdfs.append(rdf)
