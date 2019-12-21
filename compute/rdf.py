@@ -7,6 +7,20 @@ from ..common.block import Block
 from ..common.frame import Frame
 
 class RDF:
+    ''' make smda.RDF() instance outside of for ts in u.trajectory loop
+
+    [ recommended ]
+    r = smda.RDF(None, None)
+    bins = r.bins
+    for ts in u.trajectory:
+        rdf = r.run_frame(ts, pos1, pos2)
+    
+    [ not recommended ]
+    for ts in u.trajectory:
+        r = smda.RDF(...)
+        rdf = r.
+    '''
+
     def __init__(self, g1, g2,
                  nbins=75, limits=(0.0, 1.5),
                  b=0, e=100000, skip=1,
