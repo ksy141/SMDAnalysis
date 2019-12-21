@@ -95,6 +95,9 @@ class RDF:
         nA = len(g1_pos)
         nB = len(g2_pos)
         N = nA * nB
+
+        if N == 0:
+            return np.zeros(len(self.bins))
         
         vol = ts.volume / np.power(10, 3)
         density = N / vol
@@ -124,6 +127,9 @@ class RDF:
         nA = len(g1_pos)
         nB = len(g2_pos)
         N = nA * nB
+
+        if N == 0:
+            return np.zeros(len(self.bins))
 
         area = (ts.dimensions[0] * ts.dimensions[1])/100
         density = N / area
