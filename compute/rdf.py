@@ -71,7 +71,7 @@ class RDF:
         if args:
             g1_pos = args[0]
             g2_pos = args[1]
-            if g1_pos == g2_pos:
+            if np.all(g1_pos == g2_pos):
                 self.self_rdf = True
         
         else:
@@ -100,7 +100,7 @@ class RDF:
         if args:
             g1_pos = args[0]
             g2_pos = args[1]
-            if g1_pos == g2_pos:
+            if np.all(g1_pos == g2_pos):
                 self.self_rdf = True
  
         else:
