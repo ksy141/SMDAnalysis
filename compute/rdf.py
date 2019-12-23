@@ -24,7 +24,7 @@ class RDF:
     def __init__(self, g1, g2,
                  nbins=75, limits=(0.0, 1.5),
                  b=0, e=100000, skip=1,
-                 serial=True,
+                 serial=True, mask=1,
                  nblocks = 5):
         
         self.self_rdf = False
@@ -58,6 +58,11 @@ class RDF:
         self.bins  = 0.5 * (edges[1:] + edges[:-1])
         self.shell_vol  = 4.0/3.0 * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
         self.shell_area = np.pi * (np.power(edges[1:], 2) - np.power(edges[:-1], 2))
+        
+        self.mask = mask
+        self.single_mask_array = np.zeros((mask, mask)) + self.rmax + 1
+        #self.mask_array = None
+ 
 
     def run(self, D = 3):
         print("frame starts at: %d" %self.bframe)
@@ -104,7 +109,11 @@ class RDF:
 
         d = distance_array(g1_pos, g2_pos, box=ts.dimensions)/10
         if self.self_rdf:
-            np.fill_diagonal(d, self.rmax + 1)
+            #np.fill_diagonal(d, self.rmax + 1)
+            #if self.mask_array is None:
+            nmol = int(nA/self.mask)
+            mask_array = np.kron(np.eye(nmol, dtype=int), self.single_mask_array)
+            d += mask_array
         
         count = np.histogram(d, **self.rdf_settings)[0]  
         count = count.astype(np.float64)
@@ -136,11 +145,15 @@ class RDF:
         
         g1_pos[:,2] = 0.0
         g2_pos[:,2] = 0.0
-            
+        
         d = distance_array(g1_pos, g2_pos, box=ts.dimensions)/10
         if self.self_rdf:
-            np.fill_diagonal(d, self.rmax + 1)
-        
+            #np.fill_diagonal(d, self.rmax + 1)
+            #if self.mask_array is None:
+            nmol = int(nA/self.mask) #update mask_array as No. atoms can change with time
+            mask_array = np.kron(np.eye(nmol, dtype=int), self.single_mask_array)
+            d += mask_array
+             
         count = np.histogram(d, **self.rdf_settings)[0]  
         count = count.astype(np.float64)
         rdf = count / density / self.shell_area
