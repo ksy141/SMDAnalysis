@@ -140,6 +140,7 @@ class REUS_Analysis:
         subprocess.call(['bash', 'run.sh'])
 
         ### BLOCK AVERAGE
+        fig, ax = plt.subplots()
         pmfs = []
         for i in range(nblocks):
             p = np.loadtxt('pmf{}.dat'.format(i))
@@ -148,6 +149,10 @@ class REUS_Analysis:
             y -= y[idx_zero]
             y *= 0.239 # kj to kcal
             pmfs.append(y)
+            ax.plot(x, y, label=str(i))
+        fig.tight_layout()
+        fig.savefig('pmfs.pdf')
+
         pmfs = np.array(pmfs)
         ave = np.average(pmfs, axis=0)
         std = np.std(pmfs, axis = 0)
