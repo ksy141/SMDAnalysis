@@ -257,14 +257,20 @@ class DATAWriter(base.WriterBase):
         self.f.write('\n')
         self.f.write('{}\n'.format(btype_sections[bonds.btype]))
         self.f.write('\n')
+
+        btypes = bonds.types()
+        btypes_dict = {}
+        for i, btype in enumerate(btypes, 1):
+            btypes_dict[btype] = i
+
         for bond, i in zip(bonds, range(1, len(bonds)+1)):
             try:
-                self.f.write('{:d} {:d} '.format(i, int(bond.type))+\
+                self.f.write('{:d} {:d} '.format(i, btypes_dict[bond.type])+\
                         ' '.join((bond.atoms.indices + 1).astype(str))+'\n')
             except TypeError:
                 raise TypeError('LAMMPS DATAWriter: Trying to write bond, '
                                 'but bond type {} is not '
-                                'numerical.'.format(bond.type))
+                                'numerical.'.format(btypes_dict[bond.type]))
 
     def _write_dimensions(self, dimensions):
         """Convert dimensions to triclinic vectors, convert lengths to native
