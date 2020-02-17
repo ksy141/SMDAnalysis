@@ -143,7 +143,7 @@ class CGMapping:
     
         
         for key, value in attrs.items():
-            attrs[key] = np.array(value).flatten()
+            attrs[key] = [item for sublist in value for item in sublist]
     
         uCG = mda.Universe.empty(n_atoms = natoms_all,
                                  n_residues = nres_all,
