@@ -2,7 +2,47 @@ import MDAnalysis as mda
 import numpy as np
 
 class CGMapping:
+    """Map all-atom trajectories to CG trajectories
+    Input mapping array and type (int number)
+
+    Example
+    -------
+    >>> mappings = {'MeO': {'CH3': ['C', 'HA', 'HB', 'HC'],
+    ...                     'OH':  ['O', 'H']}}
+
+    >>> names2types = {'CH3': '1', 'OH': 2}
+
+    >>> ma = {'MeO': {'CH3': u.select_atoms('resname MeO and name C HA HB HC'),
+    ...               'OH':  u.select_atoms('resname MeO and name O H')}}
+
+    >>> u = mda.Universe('methanol_1728.pdb', 'traj.whole.trr')
+    >>> uCG = cging.run(u)
+    
+    Make bonds
+    CH3 = [0, 2, 4, ...] (CG atom indices of CH3)
+    OH  = [1, 3, 5, ...] (CG atom indices of OH)
+    np.concatenate([CH3, OH]) = [0, 2, 4, ..., 1, 3, 5...]
+    np.concatenate([CH3, OH]).reshape(2, -1) = [[0, 2, 4, ...], 
+                                                [1, 3, 5, ...]]
+    np.concatenate([CH3, OH]).reshape(2, -1).T = [[0, 1], 
+                                                  [2, 3],
+                                                  [4, 5], ...]
+
+    >>> CH3   = uCG.select_atoms('resname MeO and name CH3').indices 
+    >>> OH    = uCG.select_atoms('resname MeO and name OH').indices
+    >>> bonds = np.concatenate([CH3, OH]).reshape(2, -1).T 
+    >>> bonds = tuple(map(tuple, bonds)) 
+    >>> uCG.add_TopologyAttr('bonds', bonds)
+    """
+
     def __init__(self, mappings=None, names2types=None):
+        """Set up a CGMapping
+        Parameters
+        ----------
+        mappings : {'resname': {'CGsite': ['AA atom names']}}
+        names2types : {'First CG site': '1', 'Second CG site': '2', ...}
+        """
+
         self.mappings = mappings
         self.names2types = names2types
         pass
@@ -10,7 +50,7 @@ class CGMapping:
     def run(self, u):
         self.analyze_universe(u)
         
-        ### mappings to mapping AtomGroups   
+        ### mappings to mapping AtomGroups  
         ma = {}
         for resname in self.mappings.keys():
             ma[resname] = {}
@@ -143,6 +183,16 @@ class CGMapping:
     
     
     def _mix_1d(self, arrays):
+        """Parameters
+        ----------
+        arrays : an array of 1D arrays; lengths of 1D arrays are the same. 
+
+        Examples
+        --------
+        >>> arrays = [[A, A, A], [B, B, B], [C, C, C]]
+        >>> _mix_1d(arrays) = [A, B, C, A, B, C, A, B, C]
+        """
+
         narray = len(arrays)
         nlen   = len(arrays[0])
         out = []
@@ -152,16 +202,64 @@ class CGMapping:
                 out.append(arrays[j][i])
     
         return np.array(out)
-    
+
     
     def _mix(self, arrays):
-        shape = arrays[0].shape[1]
-        out = np.concatenate(arrays, axis=1).reshape(-1, shape)
+        """Mix CG positions/forces
+        Examples CG sites of CH3 and OH = CG atoms of CH3 and OH
+        -------------------------------
+        arrays = [np.array(
+                  [[px(CH3_1), py(CH3_1), pz(CH3_1)],
+                   [px(CH3_2), py(CH3_2), pz(CH3_2)],
+                   ...]),
+
+                  np.array(
+                  [[px(OH1), py(OH1), pz(OH1)],
+                   [px(OH2), py(OH2), pz(OH2)],
+                   ...])]
+        
+        np.concatenate(arrays, axis=1) =
+        [[px(CH3_1), py(CH3_1), pz(CH3_1), px(OH1), py(OH1), pz(OH1)],
+         [px(CH3_2), py(CH3_2), pz(CH3_2), px(OH2), py(OH2), pz(OH2)],
+         ...]
+
+        _mix(arrays) = 
+        [[px(CH3_1), py(CH3_1), pz(CH3_1)],
+         [px(OH1),   py(OH1),   pz(OH1)], 
+         [px(CH3_2), py(CH3_2), pz(CH3_2)],
+         [px(OH2),   py(OH2),   pz(OH2)],
+         ...]
+        """
+
+        dim = arrays[0].shape[1] #3
+        out = np.concatenate(arrays, axis=1).reshape(-1, dim)
         return out
     
     
    
     def _block_avg(self, f, w, natoms):
+        """Map AA positions to CG positions for each CG type for each molecule type
+        Examples CG site OH = AA atoms of O and H
+        -------------------
+        natoms for OH = 2
+        w for OH = [16, 1]
+        
+        arrays for OH = 
+        [[px(O1), py(O1), pz(O1)], 
+         [px(H1), py(H1), pz(H1)],
+         [px(O2), py(O2), pz(O2)],
+         [px(H2), py(H2), pz(H2)], ...]
+
+        x  = [px(O1), px(H1), px(O2), px(H2), ...]
+        
+        x.reshape(-1, natoms) = 
+        [[px(O1), px(H1)],
+         [px(O2), px(H2)], ...]
+        
+        np.average(x.reshape(-1, natoms), weights=w, axis=1) = 
+        [16/17 * fx(O1) + 1/17 * fx(H1), 16/17 * fx(O2) + 1/17 * fx(H2), ...]
+        """
+
         x = f[:,0]
         y = f[:,1]
         z = f[:,2]
@@ -173,6 +271,27 @@ class CGMapping:
         return np.transpose([xt, yt, zt])
     
     def _block_sum(self, f, natoms):
+        """Map AA forces to CG forces for each CG type for each molecule type
+        Examples CG site OH = AA atoms of O and H
+        -------------------
+        natoms for OH = 2
+        
+        arrays for OH = 
+        [[fx(O1), fy(O1), fz(O1)], 
+         [fx(H1), fy(H1), fz(H1)],
+         [fx(O2), fy(O2), fz(O2)],
+         [fx(H2), fy(H2), fz(H2)], ...]
+
+        x  = [fx(O1), fx(H1), fx(O2), fx(H2), ...]
+        
+        x.reshape(-1, natoms) = 
+        [[fx(O1), fx(H1)],
+         [fx(O2), fx(H2)], ...]
+        
+        np.sum(x.reshape(-1, natoms), axis=1) = 
+        [fx(O1) + fx(H1), fx(O2) + fx(H2), ...]
+        """
+
         x = f[:,0]
         y = f[:,1]
         z = f[:,2]
