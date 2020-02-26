@@ -10,7 +10,7 @@ class CGMapping:
     >>> mappings = {'MeO': {'CH3': ['C', 'HA', 'HB', 'HC'],
     ...                     'OH':  ['O', 'H']}}
 
-    >>> names2types = {'CH3': '1', 'OH': 2}
+    >>> names2types = {'CH3': 'CG1', 'OH': 'CG2'}
 
     >>> ma = {'MeO': {'CH3': u.select_atoms('resname MeO and name C HA HB HC'),
     ...               'OH':  u.select_atoms('resname MeO and name O H')}}
@@ -33,6 +33,13 @@ class CGMapping:
     >>> bonds = np.concatenate([CH3, OH]).reshape(2, -1).T 
     >>> bonds = tuple(map(tuple, bonds)) 
     >>> uCG.add_TopologyAttr('bonds', bonds)
+
+    >>> cgatoms2nums = CGMapping().cgatoms2nums
+    >>> cgma         = CGMapping().cgma
+
+    cgatoms2nums = {'MeO': {'CH3': '1', 'OH': '2'}}
+    cgma         = {'MeO': {'CH3': uCG.select_atoms('resname MeO and name CH3'),
+                            'OH':  uCG.select_atoms('resname MeO and name OH')}}
     """
 
     def __init__(self, mappings=None, names2types=None):
@@ -40,7 +47,7 @@ class CGMapping:
         Parameters
         ----------
         mappings : {'resname': {'CGsite': ['AA atom names']}}
-        names2types : {'First CG site': '1', 'Second CG site': '2', ...}
+        names2types : {'First CG site': 'CG1', 'Second CG site': 'CG2', ...}
         """
 
         self.mappings = mappings
@@ -61,7 +68,8 @@ class CGMapping:
                 txt += ' '.join(self.mappings[resname][atn])
                 print(resname + '+' + atn + ': ' + txt)
                 ma[resname][atn] = u.select_atoms(txt)
-        
+
+       
         ### Create blank Universe
         uCG = self.create_universe(ma)
         
@@ -96,6 +104,29 @@ class CGMapping:
             uCG.trajectory[i].forces = FCG
 
         self.analyze_universe(uCG)
+ 
+
+        ### cgatoms to cg atom numbers
+        n = 1
+        cgatoms2nums = {}
+        for resname in self.mappings.keys():
+            cgatoms2nums[resname] = {}
+
+            for atn in self.mappings[resname].keys():
+                cgatoms2nums[resname][atn] = str(n)
+                n += 1
+
+        ### cg mappings to cg ma
+        cgma = {}
+        for resname in self.mappings.keys():
+            cgma[resname] = {}
+
+            for atn in self.mappings[resname].keys():
+                cgma[resname][atn] = uCG.select_atoms('resname %s and name %s' %(resname, atn))
+        
+        self.cgatoms2nums = cgatoms2nums
+        self.cgma         = cgma
+        
         return uCG
     
 
@@ -127,7 +158,7 @@ class CGMapping:
     
                 ws.append(self._block_1d_sum(ag.masses, natoms))
                 names.append([cgname] * nres)
-                types.append([self.names2types[cgname]] * nres)
+                types.append([self.names2types[cgname][2:]] * nres)
                 resnames = [resname] * nres
                 resids.append(np.arange(last_resid, last_resid + nres))
             
