@@ -37,7 +37,7 @@ class CGMapping:
     >>> cgatoms2nums = CGMapping().cgatoms2nums
     >>> cgma         = CGMapping().cgma
 
-    cgatoms2nums = {'MeO': {'CH3': '1', 'OH': '2'}}
+    cgatoms2nums = {'CH3': '1', 'OH': '2'}
     cgma         = {'MeO': {'CH3': uCG.select_atoms('resname MeO and name CH3'),
                             'OH':  uCG.select_atoms('resname MeO and name OH')}}
     """
@@ -110,10 +110,11 @@ class CGMapping:
         n = 1
         cgatoms2nums = {}
         for resname in self.mappings.keys():
-            cgatoms2nums[resname] = {}
+            #cgatoms2nums[resname] = {}
 
             for atn in self.mappings[resname].keys():
-                cgatoms2nums[resname][atn] = str(n)
+                #cgatoms2nums[resname][atn] = str(n)
+                cgatoms2nums[atn] = str(n)
                 n += 1
 
         ### cg mappings to cg ma
