@@ -150,7 +150,7 @@ class REUS_Analysis:
             y *= 0.239 # kj to kcal
             pmfs.append(y)
             ax.plot(x, y, label=str(i))
-        fig.tight_layout()
+        ax.legend()
         fig.savefig('pmfs.pdf')
 
         pmfs = np.array(pmfs)
@@ -167,7 +167,36 @@ class REUS_Analysis:
         
         os.chdir('../')
 
+    def get_mfs(self):
+        import glob
+        os.chdir('pmfs')
+        
+        fig, ax = plt.subplots()
+        flist = glob.glob('pmf*.dat')
+        flist = sorted(flist, key = lambda t: int(t.split('.')[0][3:]))
+        mfs = []
 
+        for fname in flist:
+            pmf = np.loadtxt(fname)
+            x = pmf[:,0]
+            y = pmf[:,1]
+            g = np.gradient(y, x)
+            mfs.append(g)
+
+            ax.plot(x, g, label=fname.split('.')[0][3:])
+            np.savetxt(fname[1:], np.transpose([x, g]), fmt='%10.3f')
+        ax.legend()
+        fig.savefig('mfs.pdf')
+        
+        fig, ax = plt.subplots()
+        avg = np.average(mfs, axis=0)
+        std = np.std(mfs, axis=0)
+        ax.plot(x, avg, color='C0')
+        ax.fill_between(x, avg - std, avg + std, color='C0', alpha=0.4)
+        fig.tight_layout()
+        fig.savefig('mf.pdf')
+        os.chdir('../')
+            
 
     def _get_info(self, string, line):
         _, __, interest = line.partition(string)
