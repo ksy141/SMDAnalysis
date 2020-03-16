@@ -107,10 +107,10 @@ class CGMapping:
  
 
         ### cgatoms to cg atom numbers
-        n = 1
         cgatoms2nums = {}
         for resname in self.mappings.keys():
             #cgatoms2nums[resname] = {}
+            n = 1
 
             for atn in self.mappings[resname].keys():
                 #cgatoms2nums[resname][atn] = str(n)
@@ -338,6 +338,167 @@ class CGMapping:
     def _block_1d_sum(self, f, natoms):
         f = np.array(f)
         return np.sum(f.reshape(-1, natoms), axis=1)
+
+
+    def bond_sort(self, blist):
+        """ sort bonds so that the bonds' order is the same with data file.
+        First sort rows and then columns
+        
+        blists = {'DOPC': [['HG', 'MG'], ['MG', 'MT2'], ['MG', 'MT3'], ['MT2', 'ET2'], ['MT3', 'ET3']]}
+        blist  = blists['DOPC'] = [['HG', 'MG'], ['MG', 'MT2'], ['MG', 'MT3'], ['MT2', 'ET2'], ['MT3', 'ET3']]
+        
+        cgatoms2nums = {'HG': '1', 'MG': '2', 'MT2': '3', 'ET2': '4', 'MT3': '5', 'ET3': '6'}
+        vfunc(blist) =            [['1',  '2'],  ['2',  '3'],   ['2',  '4'],   ['3',    '4'],  ['5', '6']]
+        """
+        
+        func  = lambda t: self.cgatoms2nums[t]
+        vfunc = np.vectorize(func)
+
+        t = []
+        lastaxis = vfunc(blist).astype(int)
+        for (i, j), (at1, at2) in zip(lastaxis, blist):
+            if i > j:
+                t.append([at2, at1])
+            else:
+                t.append([at1, at2])
+
+        t = np.array(t)
+        s = vfunc(t).astype(int)
+        return t[np.lexsort(s[:, ::-1].T)]
+
+
+    def angle_sort(self, alist):
+        """ sort angles so that the angles' order is the same with data file.
+        First sort rows (compare 0 and 2 elements in each row) 
+        and then columns (based on the 0th index)
+
+        alists = {'DOPC': [['HG',  'MG', 'MT2'], 
+                           ['MG', 'MT2', 'ET2'], 
+                           ['HG',  'MG', 'MT3'], 
+                           ['MG', 'MT3', 'ET3'], 
+                           ['MT2', 'MG', 'MT3']]}
+        
+        alist = alists['DOPC']
+        vfunc(alist) = [['1', '2', '3'], 
+                        ['2', '3', '4'],
+                        ['1', '2', '5'],
+                        ['2', '5', '6'],
+                        ['3', '2', '4']]
+        """
+        
+        func  = lambda t: self.cgatoms2nums[t]
+        vfunc = np.vectorize(func)
+
+        t = []
+        lastaxis = vfunc(alist).astype(int)
+        for (i, j, k), (at1, at2, at3) in zip(lastaxis, alist):
+            if i > k:
+                t.append([at3, at2, at1])
+            else:
+                t.append([at1, at2, at3])
     
-    
-    
+        t = np.array(t)
+        s = vfunc(t).astype(int)
+        return t[np.lexsort(s[:, ::-1].T)]
+        
+
+    def write_potential(self, fname='system.settings', blists, alists):
+        """names2types = {'HG': '1',  'MG': '2', 
+                          'MT2': '3', 'ET2': '4', 
+                          'MT3': '3', 'ET3': '4'}
+        list(set(names2types.values())) = ['1', '2', '3', '4']
+        """
+
+        def type_order(str1, str2):
+            ret = None
+            if int(str1[2:]) > int(str2[2:]):
+                ret = (str2, str1)
+            else:
+                ret = (str1, str2)
+            return ret
+
+        ofile = open(fname, 'w')
+        v = sorted(list(set(self.names2types.values())))
+        
+        ### Pair coeff
+        for t0 in v:
+            i = int(t0[2:])
+            for t1 in v:
+                j = int(t1[2:])
+                if not i > j:
+                    ofile.write('pair_coeff {i:d} {j:d} {it:s}_{jt:s}.table {it:s}_{jt:s}\n'.format(
+                        i=i, j=j, it=t0, jt=t1))
+            ofile.write('\n\n')
+        
+        ### Bond coeff
+        saved_blists = []
+        i = 0
+        
+        for blist in blists.values():
+            for b in blist:
+                t0, t1 = type_order(self.names2types[b[0]], self.names2types[b[1]])
+                if not [t0, t1] in saved_blists:
+                    i += 1
+                    saved_blists.append([t0, t1])
+                    ofile.write('bond_coeff {i:d} {t0:s}_{t1:s}_bon.table {t0:s}_{t1:s}_bon\n'.format(
+                        i=i, t0=t0, t1=t1))
+
+        ### Angle coeff
+        saved_alists = []
+        i = 0
+
+        for alist in alists.values():
+            for a in alist:
+                t1 = self.names2types[a[1]]
+                t0, t2 = type_order(self.names2types[a[0]], self.names2types[a[2]])
+                if not [t0, t1, t2] in saved_alists:
+                    i += 1
+                    saved_alists.append([t0, t1, t2])
+                    ofile.write('angle_coeff {i:d} {t1:s}_{t0:s}_{t2:s}_ang.table {t1:s}_{t0:s}_{t2:s}_ang\n'.format(
+                        i=i, t0=t0, t1=t1, t2=t2))
+            
+        ofile.write('\n')
+        ofile.close()
+
+
+    def write_top(self, fname='top.in', blists, alists):
+        ofile = open(fname, 'w')
+        ofile.write('cgsites %d\n' %(self.uCG.atoms.n_atoms))
+        
+        v = list(self.names2types.values())
+        cgtypes = 'cgtypes %d\n' %(len(set(v)))
+        for typename in sorted(set(v), key=lambda x: v.index(x)):
+            cgtypes += typename + '\n'
+        
+        ofile.write(cgtypes)
+        ofile.write('moltypes %d\n' %(len(self.mappings.keys())))
+        
+        for resname in self.mappings.keys():
+            mol = 'mol %d -1\nsitetypes\n' %(len(self.mappings[resname].keys()))
+            for atomname in self.mappings[resname].keys():
+                mol += self.names2types[atomname][2:] + '\n'
+            ofile.write(mol)
+            
+            bonds_txt = 'bonds %d\n' %(len(blists[resname]))
+            for b0, b1 in blists[resname]:
+                bonds_txt += '{} {}\n'.format(self.cgatoms2nums[b0],
+                                              self.cgatoms2nums[b1])
+            ofile.write(bonds_txt)
+            
+            angs_txt = 'angles %d 0\n' %(len(alists[resname]))
+            for a0, a1, a2 in alists[resname]:
+                angs_txt += '{} {} {}\n'.format(self.cgatoms2nums[a1],
+                                                self.cgatoms2nums[a0],
+                                                self.cgatoms2nums[a2])
+            ofile.write(angs_txt)
+            ofile.write('dihedrals 0 0\n')
+        
+        # SYSTEM
+        systems = 'system %d\n' %(len(self.mappings.keys()))
+        for Mt, resname in enumerate(self.mappings.keys(), 1):
+            Mn = len(self.cgma[resname][list(self.mappings[resname].keys())[0]])
+            systems += '%d %d\n' %(Mt, Mn)
+        ofile.write(systems)
+        
+        ofile.close()
+
