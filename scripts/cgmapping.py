@@ -403,7 +403,7 @@ class CGMapping:
         return t[np.lexsort(s[:, ::-1].T)]
         
 
-    def write_potential(self, fname, blists, alists):
+    def write_sys(self, fname, blists, alists):
         """names2types = {'HG': '1',  'MG': '2', 
                           'MT2': '3', 'ET2': '4', 
                           'MT3': '3', 'ET3': '4'}
@@ -429,8 +429,10 @@ class CGMapping:
                 if not i > j:
                     ofile.write('pair_coeff {i:d} {j:d} {it:s}_{jt:s}.table {it:s}_{jt:s}\n'.format(
                         i=i, j=j, it=t0, jt=t1))
-            ofile.write('\n\n')
+            ofile.write('\n')
+        ofile.write('\n')
         
+
         ### Bond coeff
         saved_blists = []
         i = 0
@@ -443,6 +445,8 @@ class CGMapping:
                     saved_blists.append([t0, t1])
                     ofile.write('bond_coeff {i:d} {t0:s}_{t1:s}_bon.table {t0:s}_{t1:s}_bon\n'.format(
                         i=i, t0=t0, t1=t1))
+        ofile.write('\n')
+
 
         ### Angle coeff
         saved_alists = []
