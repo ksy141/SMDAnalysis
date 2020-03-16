@@ -127,6 +127,7 @@ class CGMapping:
         
         self.cgatoms2nums = cgatoms2nums
         self.cgma         = cgma
+        self.uCG          = uCG
         
         return uCG
     
@@ -402,7 +403,7 @@ class CGMapping:
         return t[np.lexsort(s[:, ::-1].T)]
         
 
-    def write_potential(self, fname='system.settings', blists, alists):
+    def write_potential(self, fname, blists, alists):
         """names2types = {'HG': '1',  'MG': '2', 
                           'MT2': '3', 'ET2': '4', 
                           'MT3': '3', 'ET3': '4'}
@@ -461,7 +462,7 @@ class CGMapping:
         ofile.close()
 
 
-    def write_top(self, fname='top.in', blists, alists):
+    def write_top(self, fname, blists, alists):
         ofile = open(fname, 'w')
         ofile.write('cgsites %d\n' %(self.uCG.atoms.n_atoms))
         
