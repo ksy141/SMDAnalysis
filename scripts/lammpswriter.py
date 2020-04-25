@@ -141,7 +141,7 @@ btype_sections = {'bond':'Bonds', 'angle':'Angles',
                   'dihedral':'Dihedrals', 'improper':'Impropers'}
 
 
-class DATAWriter(base.WriterBase):
+class LAMMPSWriter(base.WriterBase):
     """Write out the current time step as a LAMMPS DATA file.
 
     This writer supports the sections Atoms, Masses, Velocities, Bonds,
@@ -255,18 +255,14 @@ class DATAWriter(base.WriterBase):
 
     def _write_bonds(self, bonds):
         self.f.write('\n')
-        self.f.write('{}\n'.format(btype_sections[bonds.btype]))
+        self.f.write('{}\n'.format('Bonds'))
         self.f.write('\n')
 
-        btypes = bonds.types()
-        btypes_dict = {}
-        for i, btype in enumerate(btypes, 1):
-            btypes_dict[btype] = i
-
-        for bond, i in zip(bonds, range(1, len(bonds)+1)):
+        for i in range(len(bonds)):
             try:
-                self.f.write('{:d} {:d} '.format(i, btypes_dict[bond.type])+\
-                        ' '.join((bond.atoms.indices + 1).astype(str))+'\n')
+                at1, at2, bt = bonds[i]
+                self.f.write('{:d} {:d} {:d} {:d}\n'.format(i+1, bt, at1+1, at2+1))
+
             except TypeError:
                 raise TypeError('LAMMPS DATAWriter: Trying to write bond, '
                                 'but bond type {} is not '
@@ -289,7 +285,7 @@ class DATAWriter(base.WriterBase):
         self.f.write('\n')
 
     @requires('types', 'masses')
-    def write(self, selection, frame=None):
+    def write(self, selection, bonds=None, frame=None):
         """Write selection at current trajectory frame to file.
 
         The sections for Atoms, Masses, Velocities, Bonds, Angles,
@@ -312,6 +308,10 @@ class DATAWriter(base.WriterBase):
         ----------
         selection : AtomGroup or Universe
             MDAnalysis AtomGroup (selection or Universe.atoms) or also Universe
+        
+        bonds : np.array (nbonds * 3)
+            [[atom index1 (0-indexed), atom index2 (0-indexed), bond type (1-indexed)]]
+
         frame : int (optional)
             optionally move to frame number `frame`
 
@@ -344,8 +344,11 @@ class DATAWriter(base.WriterBase):
             self.f.write('LAMMPS data file via MDAnalysis\n')
             self.f.write('\n')
             self.f.write('{:>12d}  atoms\n'.format(len(atoms)))
+            
+            if bonds is not None:
+                self.f.write('{:>12d}  {}\n'.format(len(bonds), 'bonds'))
 
-            attrs = [('bond', 'bonds'), ('angle', 'angles'),
+            attrs = [('angle', 'angles'),
                 ('dihedral', 'dihedrals'), ('improper', 'impropers')]
 
             for btype, attr_name in attrs:
@@ -361,6 +364,10 @@ class DATAWriter(base.WriterBase):
 
             self.f.write('\n')
             self.f.write('{:>12d}  atom types\n'.format(max(atoms.types.astype(np.int32))))
+            
+            if bonds is not None:
+                self.f.write('{:>12d}  {} types\n'.format(
+                    len(np.unique(bonds[:,2])), 'bond'))
 
             for btype, attr in features.items():
                 if attr is None:
@@ -373,6 +380,10 @@ class DATAWriter(base.WriterBase):
 
             self._write_masses(atoms)
             self._write_atoms(atoms)
+
+            if bonds is not None:
+                self._write_bonds(bonds)
+
             for attr in features.values():
                 if attr is None or len(attr) == 0:
                     continue
