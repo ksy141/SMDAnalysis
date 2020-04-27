@@ -20,7 +20,7 @@ from .compute.coord import Coord
 from .compute.dihedral import Dihedral
 from .common.covariance import Covariance
 from .scripts.reus_analysis import REUS_Analysis
-from .scripts.lammpswriter import LAMMPSWriter, DCDWriter
+from .scripts.lammpswriter import LAMMPSWriter
 from .scripts.cgmapping import CGMapping
 
 # THIS WILL WORK IF I DO

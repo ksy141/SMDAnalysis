@@ -241,8 +241,7 @@ class LAMMPSWriter(base.WriterBase):
         max_type = max(atoms.types.astype(np.int32))
         for atype in range(1, max_type+1):
             # search entire universe for mass info, not just writing selection
-            masses = set(atoms.universe.atoms.select_atoms(
-                'type {:d}'.format(atype)).masses)
+            masses = set(atoms.masses[atoms.types == atype])
             if len(masses) == 0:
                 mass_dict[atype] = 1.0
             else:
@@ -257,12 +256,10 @@ class LAMMPSWriter(base.WriterBase):
         self.f.write('\n')
         self.f.write('{}\n'.format('Bonds'))
         self.f.write('\n')
-
         for i in range(len(bonds)):
             try:
                 at1, at2, bt = bonds[i]
                 self.f.write('{:d} {:d} {:d} {:d}\n'.format(i+1, bt, at1+1, at2+1))
-
             except TypeError:
                 raise TypeError('LAMMPS DATAWriter: Trying to write bond, '
                                 'but bond type {} is not '
@@ -341,7 +338,7 @@ class LAMMPSWriter(base.WriterBase):
 
         features = {}
         with util.openany(self.filename, 'w') as self.f:
-            self.f.write('LAMMPS data file via MDAnalysis\n')
+            self.f.write('LAMMPS data file via SMDAnalysis\n')
             self.f.write('\n')
             self.f.write('{:>12d}  atoms\n'.format(len(atoms)))
             
@@ -392,29 +389,5 @@ class LAMMPSWriter(base.WriterBase):
             if has_velocities:
                 self._write_velocities(atoms)
 
-
-class DCDWriter(DCD.DCDWriter):
-    """Write a LAMMPS_ DCD trajectory.
-
-    The units can be set from the constructor with the keyword
-    arguments *timeunit* and *lengthunit*. The defaults are "fs" and
-    "Angstrom". See :mod:`MDAnalysis.units` for other recognized
-    values.
-    """
-    format = 'LAMMPS'
-    multiframe = True
-    flavor = 'LAMMPS'
-
-    def __init__(self, *args, **kwargs):
-        self.units = {'time': 'fs', 'length': 'Angstrom'}  # must be instance level
-        self.units['time'] = kwargs.pop('timeunit', self.units['time'])
-        self.units['length'] = kwargs.pop('lengthunit', self.units['length'])
-        for unit_type, unit in self.units.items():
-            try:
-                if units.unit_types[unit] != unit_type:
-                    raise TypeError("LAMMPS DCDWriter: wrong unit {0!r} for unit type {1!r}".format(unit, unit_type))
-            except KeyError:
-                raise ValueError("LAMMPS DCDWriter: unknown unit {0!r}".format(unit))
-        super(DCDWriter, self).__init__(*args, **kwargs)
 
 
