@@ -257,13 +257,16 @@ class LAMMPSWriter(base.WriterBase):
         self.f.write('{}\n'.format('Bonds'))
         self.f.write('\n')
         for i in range(len(bonds)):
-            try:
-                at1, at2, bt = bonds[i]
-                self.f.write('{:d} {:d} {:d} {:d}\n'.format(i+1, bt, at1+1, at2+1))
-            except TypeError:
-                raise TypeError('LAMMPS DATAWriter: Trying to write bond, '
-                                'but bond type {} is not '
-                                'numerical.'.format(btypes_dict[bond.type]))
+            a1, a2, bt = bonds[i]
+            self.f.write('{:d} {:d} {:d} {:d}\n'.format(i+1, bt, a1+1, a2+1))
+    
+    def _write_angles(self, angles):
+        self.f.write('\n')
+        self.f.write('{}\n'.format('Angles'))
+        self.f.write('\n')
+        for i in range(len(angles)):
+            a1, a2, a3, at = angles[i]
+            self.f.write('{:d} {:d} {:d} {:d} {:d}\n'.format(i+1, at, a1+1, a2+1, a3+1))
 
     def _write_dimensions(self, dimensions):
         """Convert dimensions to triclinic vectors, convert lengths to native
@@ -282,7 +285,7 @@ class LAMMPSWriter(base.WriterBase):
         self.f.write('\n')
 
     @requires('types', 'masses')
-    def write(self, selection, bonds=None, frame=None):
+    def write(self, selection, bonds=None, angles=None, frame=None):
         """Write selection at current trajectory frame to file.
 
         The sections for Atoms, Masses, Velocities, Bonds, Angles,
@@ -308,6 +311,10 @@ class LAMMPSWriter(base.WriterBase):
         
         bonds : np.array (nbonds * 3)
             [[atom index1 (0-indexed), atom index2 (0-indexed), bond type (1-indexed)]]
+
+        angles: np.array (nangles * 4)
+            [[atom1, atom2 (apex/center atom), atom3, angle type (1-indexed)]]
+            atom indices 0-indexed
 
         frame : int (optional)
             optionally move to frame number `frame`
@@ -345,8 +352,7 @@ class LAMMPSWriter(base.WriterBase):
             if bonds is not None:
                 self.f.write('{:>12d}  {}\n'.format(len(bonds), 'bonds'))
 
-            attrs = [('angle', 'angles'),
-                ('dihedral', 'dihedrals'), ('improper', 'impropers')]
+            attrs = [('dihedral', 'dihedrals'), ('improper', 'impropers')]
 
             for btype, attr_name in attrs:
                 try:
@@ -366,6 +372,10 @@ class LAMMPSWriter(base.WriterBase):
                 self.f.write('{:>12d}  {} types\n'.format(
                     len(np.unique(bonds[:,2])), 'bond'))
 
+            if angles is not None:
+                self.f.write('{:>12d}  {} types\n'.format(
+                    len(np.unique(angles[:,3])), 'angle'))
+
             for btype, attr in features.items():
                 if attr is None:
                     self.f.write('{:>12d}  {} types\n'.format(0, btype))
@@ -380,6 +390,9 @@ class LAMMPSWriter(base.WriterBase):
 
             if bonds is not None:
                 self._write_bonds(bonds)
+
+            if angles is not None:
+                self._write_angles(angles)
 
             for attr in features.values():
                 if attr is None or len(attr) == 0:
