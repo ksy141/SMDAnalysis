@@ -351,6 +351,8 @@ class LAMMPSWriter(base.WriterBase):
             
             if bonds is not None:
                 self.f.write('{:>12d}  {}\n'.format(len(bonds), 'bonds'))
+            if angles is not None:
+                self.f.write('{:>12d}  {}\n'.format(len(angles), 'angles'))
 
             attrs = [('dihedral', 'dihedrals'), ('improper', 'impropers')]
 
