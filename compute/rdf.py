@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from MDAnalysis.core.groups import AtomGroup
 # from MDAnalysis.core.universe import Universe
-from MDAnalysis.analysis.distances import distance_array
+from MDAnalysis.analysis.distances import distance_array, self_distance_array
 from ..common.block import Block
 from ..common.frame import Frame
 
@@ -106,14 +106,18 @@ class RDF:
         
         vol = ts.volume / np.power(10, 3)
         density = N / vol
-
-        d = distance_array(g1_pos, g2_pos, box=ts.dimensions)/10
+        
         if self.self_rdf:
-            #np.fill_diagonal(d, self.rmax + 1)
-            #if self.mask_array is None:
-            nmol = int(nA/self.mask)
-            mask_array = np.kron(np.eye(nmol, dtype=int), self.single_mask_array)
-            d += mask_array
+            td = self_distance_array(g1_pos, box=ts.dimensions)/10
+            d = np.append(td, td)
+        else:
+            d = distance_array(g1_pos, g2_pos, box=ts.dimensions)/10
+        #if self.self_rdf:
+        #    #np.fill_diagonal(d, self.rmax + 1)
+        #    #if self.mask_array is None:
+        #    nmol = int(nA/self.mask)
+        #    mask_array = np.kron(np.eye(nmol, dtype=int), self.single_mask_array)
+        #    d += mask_array
         
         count = np.histogram(d, **self.rdf_settings)[0]  
         count = count.astype(np.float64)
@@ -146,14 +150,18 @@ class RDF:
         g1_pos[:,2] = 0.0
         g2_pos[:,2] = 0.0
         
-        d = distance_array(g1_pos, g2_pos, box=ts.dimensions)/10
         if self.self_rdf:
-            #np.fill_diagonal(d, self.rmax + 1)
-            #if self.mask_array is None:
-            nmol = int(nA/self.mask) #update mask_array as No. atoms can change with time
-            mask_array = np.kron(np.eye(nmol, dtype=int), self.single_mask_array)
-            d += mask_array
-             
+            td = self_distance_array(g1_pos, box=ts.dimensions)/10 
+            d = np.append(td, td)
+        else:
+            d = distance_array(g1_pos, g2_pos, box=ts.dimensions)/10
+        #if self.self_rdf:
+        #    #np.fill_diagonal(d, self.rmax + 1)
+        #    #if self.mask_array is None:
+        #    nmol = int(nA/self.mask) #update mask_array as No. atoms can change with time
+        #    mask_array = np.kron(np.eye(nmol, dtype=int), self.single_mask_array)
+        #    d += mask_array
+        
         count = np.histogram(d, **self.rdf_settings)[0]  
         count = count.astype(np.float64)
         rdf = count / density / self.shell_area
