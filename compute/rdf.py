@@ -18,7 +18,7 @@ class RDF:
     [ not recommended ]
     for ts in u.trajectory:
         r = smda.RDF(...)
-        rdf = r.
+        rdf = r.run_frame(ts, pos1, pos2)
     '''
 
     def __init__(self, g1, g2,
@@ -26,7 +26,7 @@ class RDF:
                  b=0, e=100000, skip=1,
                  serial=True, mask=1,
                  nblocks = 5):
-        
+
         self.self_rdf = False
         if g1 and g2:
             assert isinstance(g1, AtomGroup)

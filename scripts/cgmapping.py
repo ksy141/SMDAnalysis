@@ -55,6 +55,12 @@ class CGMapping:
         pass
 
     def run(self, u):
+        try:
+            u.atoms.forces
+        except:
+            for i, ts in enumerate(u.trajectory):
+                u.trajectory[i].forces = np.zeros((u.atoms.n_atoms, 3))
+                
         self.analyze_universe(u)
         
         ### mappings to mapping AtomGroups  
