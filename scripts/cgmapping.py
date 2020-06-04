@@ -67,13 +67,25 @@ class CGMapping:
         ma = {}
         for resname in self.mappings.keys():
             ma[resname] = {}
+            sresname = resname.split('_')
             
-            for atn in self.mappings[resname].keys():
-                txt = 'resname ' + resname
-                txt += ' and name '
-                txt += ' '.join(self.mappings[resname][atn])
-                print(resname + '+' + atn + ': ' + txt)
-                ma[resname][atn] = u.select_atoms(txt)
+            if len(sresname) == 1: # mappings['POPC']['NC3']
+                for atn in self.mappings[resname].keys():
+                    txt = 'resname ' + resname
+                    txt += ' and name '
+                    txt += ' '.join(self.mappings[resname][atn])
+                    print(resname + '+' + atn + ': ' + txt)
+                    ma[resname][atn] = u.select_atoms(txt)
+
+            else: # mappings['278_TRP']['CA']
+                for atn in self.mappings[resname].keys():
+                    txt =  'resname ' + sresname[1]
+                    txt += ' and resid ' + sresname[0]
+                    txt += ' and name '
+                    txt += ' '.join(self.mappings[resname][atn])
+                    print(resname + '+' + atn + ': ' + txt)
+                    ma[resname][atn] = u.select_atoms(txt)
+
 
        
         ### Create blank Universe
@@ -166,7 +178,8 @@ class CGMapping:
     
                 ws.append(self._block_1d_sum(ag.masses, natoms))
                 names.append([cgname] * nres)
-                types.append([self.names2types[cgname][2:]] * nres)
+                if self.names2types is not None:
+                    types.append([self.names2types[cgname][2:]] * nres)
                 resnames = [resname] * nres
                 resids.append(np.arange(last_resid, last_resid + nres))
             
@@ -178,11 +191,13 @@ class CGMapping:
             attrs['resids'].append(  self._mix_1d(resids))
             attrs['names'].append(   self._mix_1d(names))
             attrs['masses'].append(  self._mix_1d(ws))
-            attrs['types'].append(   self._mix_1d(types))
+            if self.names2types is not None:
+                attrs['types'].append(   self._mix_1d(types))
     
         
         for key, value in attrs.items():
-            attrs[key] = [item for sublist in value for item in sublist]
+            if value:
+                attrs[key] = [item for sublist in value for item in sublist]
     
         uCG = mda.Universe.empty(n_atoms = natoms_all,
                                  n_residues = nres_all,
@@ -202,7 +217,8 @@ class CGMapping:
         ag.masses = attrs['masses']
         ag.residues.resnames = attrs['resnames']
         ag.names  = attrs['names']
-        ag.types  = attrs['types']
+        if self.names2types is not None:
+            ag.types  = attrs['types']
         
         fac = np.zeros((nframes, natoms_all, 3))
         uCG.load_new(fac, forces=fac, order='fac')
