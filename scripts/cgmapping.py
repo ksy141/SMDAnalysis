@@ -69,7 +69,8 @@ class CGMapping:
         '''
         >>> n_residues = 1000
         >>> n_atoms    = 3 * 1000
-        >>> resindices = [0,0,0,1,1,1,...,1000,1000,1000]
+        >>> resindices = [0,0,0,1,1,1,...,999,999,999]
+        >>> resindices = np.repeat(np.arange(n_residues), 3)
         >>> segindices = [0] * n_residues
         
         len(resindices) = n_atoms
