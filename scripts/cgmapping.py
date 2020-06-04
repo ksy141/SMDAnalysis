@@ -141,7 +141,11 @@ class CGMapping:
             cgma[resname] = {}
 
             for atn in self.mappings[resname].keys():
-                cgma[resname][atn] = uCG.select_atoms('resname %s and name %s' %(resname, atn))
+                sresname = resname.split('_')
+                if len(sresname) == 1:
+                    cgma[resname][atn] = uCG.select_atoms('resname %s and name %s' %(resname, atn))
+                else:
+                    cgma[resname][atn] = uCG.select_atoms('resname %s and resid %s and name %s' %(sresname[1], sresname[0], atn))
         
         self.cgatoms2nums = cgatoms2nums
         self.cgma         = cgma
@@ -180,8 +184,12 @@ class CGMapping:
                 names.append([cgname] * nres)
                 if self.names2types is not None:
                     types.append([self.names2types[cgname][2:]] * nres)
-                resnames = [resname] * nres
-                resids.append(np.arange(last_resid, last_resid + nres))
+                
+                resnames = [ag.residues.resnames[0]] * nres
+                #resnames = [resname] * nres
+                resids.append(ag.residues.resids)
+                print(resids)
+                #resids.append(np.arange(last_resid, last_resid + nres))
             
             nframes = len(ag.universe.trajectory)
             last_resid += nres    
@@ -198,7 +206,6 @@ class CGMapping:
         for key, value in attrs.items():
             if value:
                 attrs[key] = [item for sublist in value for item in sublist]
-    
         uCG = mda.Universe.empty(n_atoms = natoms_all,
                                  n_residues = nres_all,
                                  atom_resindex = attrs['resids'],
@@ -206,17 +213,21 @@ class CGMapping:
                                  forces = True)
         
         uCG.transfer_to_memory()
-        uCG.add_TopologyAttr('masses')
-        uCG.add_TopologyAttr('resnames')
-        uCG.add_TopologyAttr('names')
+        uCG.add_TopologyAttr('masses', attrs['masses'])
+        uCG.add_TopologyAttr('resnames', attrs['resnames'])
+        uCG.add_TopologyAttr('names', attrs['names'])
         uCG.add_TopologyAttr('resids')
         uCG.add_TopologyAttr('types')
     
     
         ag = uCG.select_atoms('all')
-        ag.masses = attrs['masses']
-        ag.residues.resnames = attrs['resnames']
-        ag.names  = attrs['names']
+        #ag.masses = attrs['masses']
+        #print(attrs['resnames'])
+        #print(len(attrs['resnames']))
+        #print(ag.residues.resnames)
+        #print(len(ag.residues.resnames))
+        #ag.residues.resnames = attrs['resnames']
+        #ag.names  = attrs['names']
         if self.names2types is not None:
             ag.types  = attrs['types']
         
