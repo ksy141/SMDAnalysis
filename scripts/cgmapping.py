@@ -24,12 +24,13 @@ class CGMapping:
     def run(self, u):
         self.analyze_universe(u)
         uCG = self.create_universe(u)
+        uCG.trajectory[0].dt = u.trajectory[0].dt
         self.analyze_universe(uCG)
 
         for i, ts in enumerate(u.trajectory):
             if i%100 == 0:
                 print("processing %d/%d frames" %(i, len(u.trajectory)))
-            uCG.trajectory[i].dimensions = u.dimensions
+            uCG.trajectory[i].dimensions = u.trajectory[i].dimensions
 
             XCG = []
             FCG = []
