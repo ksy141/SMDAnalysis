@@ -7,6 +7,16 @@ from ..common.frame import Frame
 
 class RDF:
     def __init__(self, nbins=100, limits=(0.0, 15.0)):
+        """
+        Set up a RDF calculation.
+        Define the number of bins and limits.
+
+        Parameter
+        ---------
+        nbins  = 100  [int]
+        limits = (0.0, 15.0) [A]
+        """
+        
         self.rdf_settings = {'bins': nbins, 'range': limits}
         self.rmax = limits[1]
         
@@ -15,7 +25,26 @@ class RDF:
         self.shell_vol  = 4.0/3.0 * np.pi * (np.power(edges[1:], 3) - np.power(edges[:-1], 3))
         self.shell_area = np.pi * (np.power(edges[1:], 2) - np.power(edges[:-1], 2))
 
-    def run(self, ag1, ag2, D = None, b=0, e=1000000, nblocks=1):
+
+    def run(self, ag1, ag2, D = None, b=0, e=1e10, nblocks=1):
+        """
+        Run a RDF calculation for static atomic groups
+        
+        Parameter
+        ---------
+        ag1, ag2:   atomic groups
+        D  = None   [int]
+        b  = 0      [ns]
+        e  = 1e10   [ns]
+        nblocks = 1 [int]
+
+        Output
+        ------
+        [:,0] = bins [A]
+        [:,1] = RDF (avg) [unitless]
+        [:,2] = RDF (std) [unitless]
+        """
+
         assert isinstance(ag1, AtomGroup)
         assert isinstance(ag2, AtomGroup)
         u = ag1.universe
@@ -25,7 +54,7 @@ class RDF:
         print("frame ends   at %d" %eframe)
 
         rdfs = []
-        for nframes, ts in enumerate(u.trajectory[bframe:eframe], 1):
+        for ts in u.trajectory[bframe:eframe+1]:
             if D == 3:
                 rdf = self.run3d_frame(ag1.positions, ag2.positions, u.dimensions)
             elif D == 2:
@@ -34,16 +63,25 @@ class RDF:
                 assert 1==0, 'Specify D=2 or D=3'
             rdfs.append(rdf)
         
-        print("total %d frames" %nframes)
         avg, std = Block().block(rdfs, nblocks)
         return np.transpose([self.bins, avg, std])
 
         
     def run3d_frame(self, g1_pos, g2_pos, dimensions):
-        if np.all(g1_pos == g2_pos):
-            self_rdf = True
-        else:
-            self_rdf = False
+        """
+        Run a RDF calculation for one frame.
+        Great flexibility as it takes atomic positions
+
+        Parameters
+        ----------
+        g1_pos = g1.positions [A]
+        g2_pos = g2.positions [A]
+        dimensions = u.dimensions
+        
+        Outputs
+        -------
+        RDF array [A]
+        """
 
         N = len(g1_pos) * len(g2_pos)
         if N == 0:
@@ -61,10 +99,20 @@ class RDF:
     
 
     def run2d_frame(self, g1_pos, g2_pos, dimensions):
-        if np.all(g1_pos == g2_pos):
-            self_rdf = True
-        else:
-            self_rdf = False
+        """
+        Run a RDF calculation for one frame.
+        Great flexibility as it takes atomic positions
+
+        Parameters
+        ----------
+        g1_pos = g1.positions [A]
+        g2_pos = g2.positions [A]
+        dimensions = u.dimensions
+        
+        Outputs
+        -------
+        RDF array [A]
+        """
 
         N = len(g1_pos) * len(g2_pos)
         if N == 0:
