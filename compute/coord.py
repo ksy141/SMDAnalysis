@@ -5,6 +5,15 @@ from MDAnalysis.core.groups import AtomGroup
 from ..common.frame import Frame
 
 class Coord:
+    """
+    Compute the coordination numbers of atoms
+    >>> c = smda.Coord().run(ag1, ag2, nn=6, mm=12, 
+    ...                      d0=0[A], r0=2.5[A], 
+    ...                      b=0[ns], e=1e10[ns])
+    >>> c[:,0] = time [ns]
+    >>> c[:,1] = coordination number [unitless]
+    """
+
     def __init__(self):
         pass
         

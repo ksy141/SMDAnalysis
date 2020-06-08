@@ -6,6 +6,30 @@ from ..common.block import Block
 from ..common.frame import Frame
 
 class RDF:
+    """
+    Compute the RDF
+    r.bins, r.shell_vol, r.shell_area available
+    >>> r = smda.RDF(nbins=100, limits=(0.0, 15.0)[A])
+
+    1) For static atomic groups
+    >>> rdf = r.run(ag1, ag2, D=2/3, 
+    ...             b=0[ns], e=1e10[ns], nblocks=1)
+    >>> rdf[:,0] = bins [A]
+    >>> rdf[:,1] = RDF (avg) [unitless]
+    >>> rdf[:,2] = RDF (std) [unitless]
+
+    2) For dynamic atomic groups
+    >>> data = []
+    >>> for ts in u.trajectory:
+    ...    g1_pos = g1.positions[SELECT]
+    ...    g2_pos = g2.positions[SELECT]
+    ...    data.append(rdf.run2d_frame(g1_pos, g2_pos, u.dimensions))
+    ...    data.append(rdf.run3d_frame(g1_pos, g2_pos, u.dimensions))
+    >>> rdf = np.transpose([r.bins, data])
+    >>> rdf[:,0] = bins [A]
+    >>> rdf[:,1] = RDF  [unitless]
+    """
+    
     def __init__(self, nbins=100, limits=(0.0, 15.0)):
         """
         Set up a RDF calculation.
