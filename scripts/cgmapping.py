@@ -159,6 +159,7 @@ class CGMapping:
         uCG.add_TopologyAttr('resid', attr['resid'])
         uCG.add_TopologyAttr('resname', attr['resname'])
         uCG.add_TopologyAttr('name', attr['name'])
+        uCG.add_TopologyAttr('type', attr['name'])
         uCG.add_TopologyAttr('mass', attr['mass'])
 
         fac = np.zeros((nframes, n_atoms, 3))
@@ -179,4 +180,28 @@ class CGMapping:
         print("---------------------------\n")
     
     
+    def name2type(self, universe, types={}):
+        """ 
+        When types is given: Use for - if loop.
+        >>> types = {'SOL': 1, 'SOD': 2, 'CLA': 3}
+
+        When types is not given:
+        It will assign the number based on atom name.
+        Use for - if - else loop.
+
+        When types is given for some atoms:
+        Problematic!
+        """
+
+        t = 1
+        for atom in universe.atoms:
+            if atom.name in types.keys():
+                atom.type = types[atom.name]
+            else:
+                atom.type = t
+                types[atom.name] = t
+                t += 1
+        print(types)
+
+
 
