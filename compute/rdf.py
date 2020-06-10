@@ -23,9 +23,9 @@ class RDF:
     >>> for ts in u.trajectory:
     ...    g1_pos = g1.positions[SELECT]
     ...    g2_pos = g2.positions[SELECT]
-    ...    data.append(rdf.run2d_frame(g1_pos, g2_pos, u.dimensions))
-    ...    data.append(rdf.run3d_frame(g1_pos, g2_pos, u.dimensions))
-    >>> rdf = np.transpose([r.bins, data])
+    ...    data.append(r.run2d_frame(g1_pos, g2_pos, u.dimensions))
+    ...    data.append(r.run3d_frame(g1_pos, g2_pos, u.dimensions))
+    >>> rdf = np.transpose([r.bins, np.average(data, axis=0)])
     >>> rdf[:,0] = bins [A]
     >>> rdf[:,1] = RDF  [unitless]
     """
