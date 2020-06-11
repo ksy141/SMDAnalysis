@@ -1,7 +1,7 @@
 import MDAnalysis as mda
 import numpy as np
 
-class CGMapping():
+class CGMapping:
     """
     Map all-atom trajectories to CG trajectories
     """
@@ -17,154 +17,54 @@ class CGMapping():
         >>> mappings['278_ALA']['CA'] = ['CA']
         >>> mappings['278_ALA']['SC'] = ['CB']
         """
-        
+
         self.mappings = mappings
+
 
     def run(self, u):
         self.analyze_universe(u)
         uCG = self.create_universe(u)
         uCG.trajectory[0].dt = u.trajectory[0].dt
         self.analyze_universe(uCG)
-        AAma, CGma, N_res = self.ma(u, uCG)
-        
-        def calculate(AAag, N):
-            p = np.split(AAag.positions, N)
-            f = np.split(AAag.forces, N)
-            w = np.split(AAag.masses, N)[0]
-            
-            XCG = np.average(p, weights=w, axis=1)
-            FCG = np.sum(f, axis=1)
-            return XCG, FCG
 
         for i, ts in enumerate(u.trajectory):
             if i%100 == 0:
                 print("processing %d/%d frames" %(i, len(u.trajectory)))
             uCG.trajectory[i].dimensions = u.trajectory[i].dimensions
 
-            for resname in self.mappings.keys():
-                for atn in self.mappings[resname].keys():
-                    XCG, FCG = calculate(AAma[resname][atn], N_res[resname])
-                    CGma[resname][atn].positions = XCG
-                    CGma[resname][atn].forces    = FCG
-        return uCG
+            XCG = []
+            FCG = []
 
-
-#    def run_parallel(self, u):
-#        from pathos.multiprocessing import ProcessingPool as Pool
-#        self.analyze_universe(u)
-#        uCG = self.create_universe(u)
-#        uCG.trajectory[0].dt = u.trajectory[0].dt
-#        self.analyze_universe(uCG)
-#        AAma, CGma, N_res = self.ma(u, uCG)
-#        
-#        def calculate(AAag, N):
-#            p = np.split(AAag.positions, N)
-#            f = np.split(AAag.forces, N)
-#            w = np.split(AAag.masses, N)[0]
-#            
-#            XCG = np.average(p, weights=w, axis=1)
-#            FCG = np.sum(f, axis=1)
-#            return XCG, FCG
-#
-#        atomgroups = []; Ns = [];
-#        for resname in self.mappings.keys():
-#            for atn in self.mappings[resname].keys():
-#                atomgroups.append(AAma[resname][atn])
-#                Ns.append(N_res[resname])
-#
-#        for i, ts in enumerate(u.trajectory):
-#            if i%100 == 0:
-#                print("processing %d/%d frames" %(i, len(u.trajectory)))
-#            uCG.trajectory[i].dimensions = u.trajectory[i].dimensions
-#            
-#            results = Pool().map(calculate, atomgroups, Ns)
-#            count = 0
-#            for resname in self.mappings.keys():
-#                for atn in self.mappings[resname].keys():
-#                    CGma[resname][atn].positions = results[count][0]
-#                    CGma[resname][atn].forces    = results[count][1]
-#                    count += 1
-#        return uCG
-
-
-
-    def ma(self, u, uCG):
-        """
-        Parameters
-        ----------
-        u:   AA universe
-        uCG: CG universe
-        
-        Returns
-        -------
-        AAma, CGma, N_res
-
-        >>> mappings = {'MeO': {'CH3': ['C', 'HA', 'HB', 'HC'],
-        ...                     'OH':  ['O', 'H']}}
-
-        >>> AAma = {'MeO': {'CH3': u.select_atoms('resname MeO and name C HA HB HC'),
-        ...                 'OH':  u.select_atoms('resname MeO and name O H')}}
-
-        >>> CGma = {'MeO': {'CH3': uCG.select_atoms('resname MeO and name CH3'),
-        ...                 'OH':  uCG.select_atoms('resname MeO and name OH')}}
- 
-        >>> N_res = {'MeO':   u.select_atoms('resname MeO').n_residues =
-        ...                 uCG.select_atoms('resname MeO').n_residues}
-        """
-
-        ### mappings to mapping AtomGroups  
-        AAma = {}
-        for resname in self.mappings.keys():
-            AAma[resname] = {}
-            sresname = resname.split('_')
-            
-            if len(sresname) == 1: # mappings['POPC']['NC3']
-                for atn in self.mappings[resname].keys():
-                    txt = 'resname ' + resname
-                    txt += ' and name '
-                    txt += ' '.join(self.mappings[resname][atn])
-                    print(resname + '+' + atn + ': ' + txt)
-                    AAma[resname][atn] = u.select_atoms(txt)
-
-            else: # mappings['278_TRP']['CA']
-                for atn in self.mappings[resname].keys():
-                    txt =  'resname ' + sresname[1]
-                    txt += ' and resid ' + sresname[0]
-                    txt += ' and name '
-                    txt += ' '.join(self.mappings[resname][atn])
-                    print(resname + '+' + atn + ': ' + txt)
-                    AAma[resname][atn] = u.select_atoms(txt)
-
-        
-        ### cg mappings to cg ma
-        CGma = {}
-        for resname in self.mappings.keys():
-            CGma[resname] = {}
-
-            for atn in self.mappings[resname].keys():
-                sresname = resname.split('_')
-                if len(sresname) == 1:
-                    txt = 'resname %s and name %s' %(resname, atn)
-                    CGma[resname][atn] = uCG.select_atoms(txt)
+            for residue in u.atoms.residues:
+                MEMBresname = residue.resname
+                PROTresname = str(residue.resid) + '_' + residue.resname
+    
+                if MEMBresname in self.mappings.keys():
+                    res = MEMBresname
+                elif PROTresname in self.mappings.keys():
+                    res = PROTresname
                 else:
-                    txt = 'resname %s and resid %s and name %s' %(sresname[1], sresname[0], atn) 
-                    CGma[resname][atn] = uCG.select_atoms(txt)
+                    continue
+                    
+                AAatoms = residue.atoms
+                for CGname, AAnames in self.mappings[res].items():
+                    bA = np.isin(AAatoms.names, AAnames)
+                    selAAatoms = AAatoms[bA]
+                    
+                    pos = selAAatoms.positions
+                    w   = selAAatoms.masses
+                    X = np.average(pos, weights=w, axis=0)
+                    XCG.append(X)
 
+                    force = selAAatoms.forces
+                    F = np.sum(force, axis=0)
+                    FCG.append(F)
 
-        ### N
-        N_res = {}
-        for resname in self.mappings.keys():
-            sresname = resname.split('_')
-            if len(sresname) == 1:
-                txt = 'resname %s' %resname
-            else:
-                txt = 'resname %s and resid %s' %(sresname[1], sresname[0])
-            N_res[resname] = u.select_atoms(txt).n_residues
-
-        return AAma, CGma, N_res
-
-
- 
+            uCG.trajectory[i].positions = XCG
+            uCG.trajectory[i].forces    = FCG
+        
+        return uCG
+        
 
     def create_universe(self, u):
         '''
