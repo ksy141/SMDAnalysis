@@ -18,7 +18,7 @@ class CGMappingPMDA(ParallelAnalysisBase):
         pass
 
     def _single_frame(self, ts, atomgroups):
-        if int((ts.time / 1000)) % 100 == 0:
+        if (ts.time / 1000) % 10 == 0:
             print("processing %d ns" %(int(ts.time/1000)))
 
         XCG = []; FCG = []
