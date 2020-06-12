@@ -273,14 +273,16 @@ class CGMappingSerial():
         print(types)
 
 
-    def write(self, fname, universe):
+    def write(self, fname, universe, units=None):
         universe.trajectory[-1]
         universe.atoms.write(fname + '.gro')
-
+        
         trr = TRRWriter(fname + '.trr', universe.atoms.n_atoms)
+        if units:
+            trr.units = units
+
         for ts in universe.trajectory:
             trr.write(ts)
         trr.close()
-
 
 
