@@ -1,9 +1,17 @@
+from MDAnalysis.coordinates.TRR import TRRWriter
 import MDAnalysis as mda
 import numpy as np
 
-class CGMapping2():
+class CGMappingSerial():
     """
     Map all-atom trajectories to CG trajectories
+    mappings['POPC']['PO4'] = ['P', 'O11', 'O12', 'O13', 'O14']
+    mappings['1_TRP']['CA'] = ['CA']
+    mappings['1_TRP']['SC'] = ['CB', ...]
+
+    >>> cg  = smda.CGMappingSerial(mappings)
+    >>> uCG = cg.run(u)
+    >>> cg.write('CGTraj', uCG)
     """
 
     def __init__(self, mappings=None):
@@ -21,10 +29,7 @@ class CGMapping2():
         self.mappings = mappings
 
     def run(self, u):
-        self.analyze_universe(u)
         uCG = self.create_universe(u)
-        uCG.trajectory[0].dt = u.trajectory[0].dt
-        self.analyze_universe(uCG)
         AAma, CGma, N_res = self.ma(u, uCG)
         
         def calculate(AAag, N):
@@ -84,7 +89,6 @@ class CGMapping2():
                     txt = 'resname ' + resname
                     txt += ' and name '
                     txt += ' '.join(self.mappings[resname][atn])
-                    print(resname + '+' + atn + ': ' + txt)
                     AAma[resname][atn] = u.select_atoms(txt)
 
             else: # mappings['278_TRP']['CA']
@@ -93,7 +97,6 @@ class CGMapping2():
                     txt += ' and resid ' + sresname[0]
                     txt += ' and name '
                     txt += ' '.join(self.mappings[resname][atn])
-                    print(resname + '+' + atn + ': ' + txt)
                     AAma[resname][atn] = u.select_atoms(txt)
 
         
@@ -124,8 +127,6 @@ class CGMapping2():
 
         return AAma, CGma, N_res
 
-
- 
 
     def create_universe(self, u):
         '''
@@ -159,6 +160,8 @@ class CGMapping2():
         len(type)    = n_atoms
         len(segid)   = n_segids
         '''
+
+        self.analyze_universe(u)
 
         try:
             u.atoms.forces
@@ -225,7 +228,12 @@ class CGMapping2():
 
         fac = np.zeros((nframes, n_atoms, 3))
         uCG.load_new(fac, forces=fac, order='fac')
-    
+        self.analyze_universe(uCG)
+        
+        uCG.trajectory[0].dt = u.trajectory[0].dt
+        for i, ts in enumerate(u.trajectory):
+            uCG.trajectory[i].dimensions = u.trajectory[i].dimensions
+     
         return uCG
 
 
@@ -263,6 +271,16 @@ class CGMapping2():
                 types[atom.name] = t
                 t += 1
         print(types)
+
+
+    def write(self, fname, universe):
+        universe.trajectory[-1]
+        universe.atoms.write(fname + '.gro')
+
+        trr = TRRWriter(fname + '.trr', universe.atoms.n_atoms)
+        for ts in universe.trajectory:
+            trr.write(ts)
+        trr.close()
 
 
 

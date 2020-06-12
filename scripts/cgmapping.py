@@ -1,4 +1,5 @@
 from pmda.parallel import ParallelAnalysisBase
+from MDAnalysis.coordinates.TRR import TRRWriter
 import MDAnalysis as mda
 import numpy as np
 
@@ -34,7 +35,16 @@ class CGMappingPMDA(ParallelAnalysisBase):
         pass
 
 
-class CGMappingPrep():
+class CGMapping():
+    """
+    >>> cging = smda.CGMapping()
+    >>> ags, CGnames = cging.create_ags(u, mappings)
+    >>> m = smda.CGMappingPMDA(ags)
+    >>> m.run(n_jobs = 4)
+    >>> uCG = cging.assign(m._results, CGnames, u, mappings)
+    >>> cging.write('CGTraj', uCG)
+    """
+ 
     def __init__(self):
         pass
 
@@ -151,6 +161,7 @@ class CGMappingPrep():
         uCG.trajectory[0].dt = u.trajectory[0].dt
         for i, ts in enumerate(u.trajectory):
             uCG.trajectory[i].dimensions = u.trajectory[i].dimensions
+        
         return uCG
 
     
@@ -180,23 +191,8 @@ class CGMappingPrep():
         return AAma, CGnames
 
 
-    def analyze_universe(self, universe):
-        natoms  = universe.atoms.n_atoms
-        nresids = len(universe.residues)
-        nframes = len(universe.trajectory)
-        print("\n---------------------------")
-        print("UNIVERSE INFO")
-        print("N_atoms:  {:d}".format(natoms))
-        print("N_resids: {:d}".format(nresids))
-        print("N_frames: {:d}".format(nframes))
-        print("---------------------------\n")
-
-
-class CGMappingConc():
-    def __init__(self):
-        pass
-
-    def assign(self, XF, CGnames, uCG):
+    def assign(self, XF, CGnames, u, mappings):
+        uCG = self.create_universe(u, mappings)
         XF = np.vstack(XF)
         assert len(XF) == uCG.trajectory.n_frames, 'frame number?'
         
@@ -244,5 +240,27 @@ class CGMappingConc():
                 types[atom.name] = t
                 t += 1
         print(types)
+
+    def analyze_universe(self, universe):
+        natoms  = universe.atoms.n_atoms
+        nresids = len(universe.residues)
+        nframes = len(universe.trajectory)
+        print("\n---------------------------")
+        print("UNIVERSE INFO")
+        print("N_atoms:  {:d}".format(natoms))
+        print("N_resids: {:d}".format(nresids))
+        print("N_frames: {:d}".format(nframes))
+        print("---------------------------\n")
+
+    
+    def write(self, fname, universe):
+        universe.trajectory[-1]
+        universe.atoms.write(fname + '.gro')
+
+        trr = TRRWriter(fname + '.trr', universe.atoms.n_atoms)
+        for ts in universe.trajectory:
+            trr.write(ts)
+        trr.close()
+
 
 

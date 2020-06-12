@@ -21,7 +21,9 @@ from .compute.dihedral import Dihedral
 from .common.covariance import Covariance
 from .scripts.reus_analysis import REUS_Analysis
 from .scripts.lammpswriter import LAMMPSWriter
-#from .scripts.cgmapping import CGMapping
+from .scripts.cgmapping import CGMapping, CGMappingPMDA
+from .scripts.cgmapping_serial import CGMappingSerial
+from .scripts.cgmapping_residue import CGMappingResidue
 
 # THIS WILL WORK IF I DO
 # from SMDAnalysis import *

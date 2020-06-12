@@ -1,9 +1,17 @@
+from MDAnalysis.coordinates.TRR import TRRWriter
 import MDAnalysis as mda
 import numpy as np
 
-class CGMapping:
+class CGMappingResidue:
     """
     Map all-atom trajectories to CG trajectories
+    mappings['POPC']['PO4'] = ['P', 'O11', 'O12', 'O13', 'O14']
+    mappings['1_TRP']['CA'] = ['CA']
+    mappings['1_TRP']['SC'] = ['CB', ...]
+
+    >>> cg  = smda.CGMappingResidue(mappings)
+    >>> uCG = cg.run(u)
+    >>> cg.write('CGTraj', uCG)
     """
 
     def __init__(self, mappings=None):
@@ -203,5 +211,14 @@ class CGMapping:
                 t += 1
         print(types)
 
+
+    def write(self, fname, universe):
+        universe.trajectory[-1]
+        universe.atoms.write(fname + '.gro')
+
+        trr = TRRWriter(fname + '.trr', universe.atoms.n_atoms)
+        for ts in universe.trajectory:
+            trr.write(ts)
+        trr.close()
 
 
