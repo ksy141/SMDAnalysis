@@ -50,7 +50,7 @@ class RDF:
         self.shell_area = np.pi * (np.power(edges[1:], 2) - np.power(edges[:-1], 2))
 
 
-    def run(self, ag1, ag2, D = None, b=0, e=1e10, nblocks=1):
+    def run(self, ag1, ag2, D = None, b=0, e=1e10, skip=1, nblocks=1):
         """
         Run a RDF calculation for static atomic groups
         
@@ -60,6 +60,7 @@ class RDF:
         D  = None   [int]
         b  = 0      [ns]
         e  = 1e10   [ns]
+        skip = 1    [int]
         nblocks = 1 [int]
 
         Output
@@ -78,7 +79,7 @@ class RDF:
         print("frame ends   at %d" %eframe)
 
         rdfs = []
-        for ts in u.trajectory[bframe:eframe+1]:
+        for ts in u.trajectory[bframe:eframe+1:skip]:
             if D == 3:
                 rdf = self.run3d_frame(ag1.positions, ag2.positions, u.dimensions)
             elif D == 2:
