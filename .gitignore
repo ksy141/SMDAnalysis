@@ -5,4 +5,6 @@ __pycache__
 */*.so
 */*.c
 */build
+*.swp
+*/*.swp
 
