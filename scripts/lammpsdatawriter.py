@@ -141,7 +141,7 @@ btype_sections = {'bond':'Bonds', 'angle':'Angles',
                   'dihedral':'Dihedrals', 'improper':'Impropers'}
 
 
-class LAMMPSWriter(base.WriterBase):
+class LAMMPSDATAWriter(base.WriterBase):
     """Write out the current time step as a LAMMPS DATA file.
 
     This writer supports the sections Atoms, Masses, Velocities, Bonds,

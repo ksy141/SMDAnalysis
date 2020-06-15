@@ -20,7 +20,8 @@ from .compute.coord import Coord
 from .compute.dihedral import Dihedral
 from .common.covariance import Covariance
 from .scripts.reus_analysis import REUS_Analysis
-from .scripts.lammpswriter import LAMMPSWriter
+from .scripts.lammpsdatawriter import LAMMPSDATAWriter
+from .scripts.lammpstrjwriter import LAMMPSTRJWriter
 from .scripts.cgmapping import CGMapping, CGMappingPMDA
 from .scripts.cgmapping_serial import CGMappingSerial
 from .scripts.cgmapping_residue import CGMappingResidue
