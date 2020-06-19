@@ -3,41 +3,6 @@ from MDAnalysis.coordinates.TRR import TRRWriter
 import MDAnalysis as mda
 import numpy as np
 
-class CGMappingPMDA(ParallelAnalysisBase):
-    """
-    Map all-atom trajectories to CG trajectories
-    using PMDA
-    """
-
-    def __init__(self, atomgroups):
-        u = atomgroups[0].universe
-        self.N = [ag.n_residues for ag in atomgroups]
-        super(CGMappingPMDA, self).__init__(u, atomgroups)
-
-    def _prepare(self):
-        pass
-
-    def _single_frame(self, ts, atomgroups):
-        if (ts.time / 1000) % 10 == 0:
-            print("processing %d ns" %(int(ts.time/1000)))
-
-        XCG = []; FCG = []
-        for ag, N in zip(atomgroups, self.N):
-            p = np.split(ag.positions, N)
-            f = np.split(ag.forces, N)
-            w = np.split(ag.masses, N)[0]
-
-            X = np.average(p, weights=w, axis=1)
-            F = np.sum(f, axis=1)
-
-            XCG.append(X)
-            FCG.append(F)
-        return [XCG, FCG]
-
-    def _conclude(self):
-        pass
-
-
 class CGMapping():
     """
     >>> cging = smda.CGMapping()
@@ -268,5 +233,38 @@ class CGMapping():
             trr.write(ts)
         trr.close()
 
+
+class CGMappingPMDA(ParallelAnalysisBase):
+    """
+    Assist CGMapping
+    """
+
+    def __init__(self, atomgroups):
+        u = atomgroups[0].universe
+        self.N = [ag.n_residues for ag in atomgroups]
+        super(CGMappingPMDA, self).__init__(u, atomgroups)
+
+    def _prepare(self):
+        pass
+
+    def _single_frame(self, ts, atomgroups):
+        if (ts.time / 1000) % 10 == 0:
+            print("processing %d ns" %(int(ts.time/1000)))
+
+        XCG = []; FCG = []
+        for ag, N in zip(atomgroups, self.N):
+            p = np.split(ag.positions, N)
+            f = np.split(ag.forces, N)
+            w = np.split(ag.masses, N)[0]
+
+            X = np.average(p, weights=w, axis=1)
+            F = np.sum(f, axis=1)
+
+            XCG.append(X)
+            FCG.append(F)
+        return [XCG, FCG]
+
+    def _conclude(self):
+        pass
 
 

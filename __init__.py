@@ -9,7 +9,8 @@ from .common.traj_to_numpy import TrajectoryToNumpy
 from .common.units import *
 from .common.wholemolecules import Wholemolecules
 from .common.cluster import Cluster
-from .compute.packing_defects import PackingDefects
+#from .compute.packing_defects import PackingDefects
+from .compute.pd import PackingDefect, PackingDefectPMDA
 from .compute.order_parameter import OrderParameters
 from .compute.rdf import RDF
 from .compute.density_help import density_help
@@ -28,5 +29,5 @@ from .scripts.cgmapping_residue import CGMappingResidue
 
 # THIS WILL WORK IF I DO
 # from SMDAnalysis import *
-__all__ = ['common', 'compute']
+#__all__ = ['common', 'compute']
 
