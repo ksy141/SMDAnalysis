@@ -294,6 +294,7 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         df.add_TopologyAttr('resname', ['O'] * N)
         df.add_TopologyAttr('name',    ['O'] * N)
         df.add_TopologyAttr('resid', np.arange(N) + 1)
+        df.add_TopologyAttr('tempfactor')
 
         nframes = len(dim)
         fac = np.zeros((nframes, N, 3))
@@ -313,65 +314,73 @@ class PackingDefectPMDA(ParallelAnalysisBase):
             yarray = np.arange(0, dim[i][1], self.dy)
             xx, yy = np.meshgrid(xarray, yarray)
             
-            ## PL acyl
             num = 0
-            bA = (1e3 <= Mup[i]) & (Mup[i] < 1e6)
-            for x1, y1 in zip(xx[bA], yy[bA]):
-                PLacyl.atoms[num].position = np.array([y1, x1, zlimup[i]])
-                num += 1
+
+        with mda.Writer('defect.pdb', multiframe=True) as PDB:
+            for i, ts in enumerate(df.trajectory):
+                df.trajectory[i].dimensions = dim[i]
+                num = 0
                 
-            bA = (1e3 <= Mdw[i]) & (Mdw[i] < 1e6)
-            for x1, y1 in zip(xx[bA], yy[bA]):
-                PLacyl.atoms[num].position = np.array([y1, x1, zlimdw[i]])
-                num += 1
-
-            ## deep
-            num = 0
-            bA = (Mup[i] == 0)
-            for x1, y1 in zip(xx[bA], yy[bA]):
-                Deep.atoms[num].position = np.array([y1, x1, zlimup[i]])
-                num += 1
+                xarray = np.arange(0, dim[i][0], self.dx)
+                yarray = np.arange(0, dim[i][1], self.dy)
+                xx, yy = np.meshgrid(xarray, yarray)
                 
-            bA = (Mdw[i] == 0)
-            for x1, y1 in zip(xx[bA], yy[bA]):
-                Deep.atoms[num].position = np.array([y1, x1, zlimdw[i]])
-                num += 1
-
-            ## TG glycerol
-            num = 0
-            bA = (1 <= Mup[i]) & (Mup[i] < 1e3)
-            for x1, y1 in zip(xx[bA], yy[bA]):
-                TGglyc.atoms[num].position = np.array([y1, x1, zlimup[i]])
-                num += 1
+                ## PL acyl -> tempfactor = 1
+                bA = (1e3 <= Mup[i]) & (Mup[i] < 1e6)
+                for x1, y1 in zip(xx[bA], yy[bA]):
+                    df.atoms[num].position = np.array([y1, x1, zlimup[i]])
+                    df.atoms[num].tempfactor = 1
+                    num += 1
                 
-            bA = (1 <= Mdw[i]) & (Mdw[i] < 1e3)
-            for x1, y1 in zip(xx[bA], yy[bA]):
-                TGglyc.atoms[num].position = np.array([y1, x1, zlimdw[i]])
-                num += 1
+                bA = (1e3 <= Mdw[i]) & (Mdw[i] < 1e6)
+                for x1, y1 in zip(xx[bA], yy[bA]):
+                    df.atoms[num].position = np.array([y1, x1, zlimdw[i]])
+                    df.atoms[num].tempfactor = 1
+                    num += 1
 
-            ## TG acyl
-            num = 0
-            bA = (0 < Mup[i]) & (Mup[i] < 1)
-            for x1, y1 in zip(xx[bA], yy[bA]):
-                TGacyl.atoms[num].position = np.array([y1, x1, zlimup[i]])
-                num += 1
+                ## deep -> tempfactor = 2
+                bA = (Mup[i] == 0)
+                for x1, y1 in zip(xx[bA], yy[bA]):
+                    df.atoms[num].position = np.array([y1, x1, zlimup[i]])
+                    df.atoms[num].tempfactor = 2
+                    num += 1
                 
-            bA = (0 <= Mdw[i]) & (Mdw[i] < 1)
-            for x1, y1 in zip(xx[bA], yy[bA]):
-                TGacyl.atoms[num].position = np.array([y1, x1, zlimdw[i]])
-                num += 1
+                bA = (Mdw[i] == 0)
+                for x1, y1 in zip(xx[bA], yy[bA]):
+                    df.atoms[num].position = np.array([y1, x1, zlimdw[i]])
+                    df.atoms[num].tempfactor = 2
+                    num += 1
 
-        def write(fname, u):
-            u.trajectory[-1]
-            u.atoms.write(fname + '.gro')
-            
-            xtc = mda.coordinates.XTC.XTCWriter(fname + '.xtc', u.atoms.n_atoms)
-            for ts in u.trajectory:
-                xtc.write(ts)
-            xtc.close()
+                ## TG glycerol -> tempfactor = 3
+                bA = (1 <= Mup[i]) & (Mup[i] < 1e3)
+                for x1, y1 in zip(xx[bA], yy[bA]):
+                    df.atoms[num].position = np.array([y1, x1, zlimup[i]])
+                    df.atoms[num].tempfactor = 3
+                    num += 1
+                
+                bA = (1 <= Mdw[i]) & (Mdw[i] < 1e3)
+                for x1, y1 in zip(xx[bA], yy[bA]):
+                    df.atoms[num].position = np.array([y1, x1, zlimdw[i]])
+                    df.atoms[num].tempfactor = 3
+                    num += 1
 
-        write('PLacyl', PLacyl)
-        write('Deep',   Deep)
-        write('TGglyc', TGglyc)
-        write('TGacyl', TGacyl)
+                ## TG acyl -> tempfactor = 4
+                bA = (0 < Mup[i]) & (Mup[i] < 1)
+                for x1, y1 in zip(xx[bA], yy[bA]):
+                    df.atoms[num].position = np.array([y1, x1, zlimup[i]])
+                    df.atoms[num].tempfactor = 4
+                    num += 1
+                
+                bA = (0 <= Mdw[i]) & (Mdw[i] < 1)
+                for x1, y1 in zip(xx[bA], yy[bA]):
+                    df.atoms[num].position = np.array([y1, x1, zlimdw[i]])
+                    df.atoms[num].tempfactor = 4
+                    num += 1
+
+                PDB.write(df)
+        
+                #with mda.Writer('%d.pdb' %i) as SGL:
+                #    SGL.write(df)
+
+
 
