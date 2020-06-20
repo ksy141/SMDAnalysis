@@ -278,6 +278,7 @@ class PackingDefectPMDA(ParallelAnalysisBase):
     
     def _conclude(self):
         print("Concluding...")
+        print(self._results)
         results = np.vstack(self._results)
         Mup    = results[:,0]
         Mdw    = results[:,1]
@@ -308,68 +309,74 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         TGacyl = df.copy()
         TGglyc = df.copy()
 
-        for i, ts in enumerate(df.trajectory):
+        xxyy = []
+        for i in range(len(df.trajectory)):
             xarray = np.arange(0, dim[i][0], self.dx)
             yarray = np.arange(0, dim[i][1], self.dy)
             xx, yy = np.meshgrid(xarray, yarray)
-            
-            ## PL acyl
+            xxyy.append([xx, yy])
+
+        ### PL acyl
+        for i, ts in enumerate(PLacyl.trajectory):
             num = 0
             bA = (1e3 <= Mup[i]) & (Mup[i] < 1e6)
-            for x1, y1 in zip(xx[bA], yy[bA]):
+            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 PLacyl.atoms[num].position = np.array([y1, x1, zlimup[i]])
                 num += 1
                 
             bA = (1e3 <= Mdw[i]) & (Mdw[i] < 1e6)
-            for x1, y1 in zip(xx[bA], yy[bA]):
+            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 PLacyl.atoms[num].position = np.array([y1, x1, zlimdw[i]])
                 num += 1
 
-            ## deep
+        ### Deep
+        for i, ts in enumerate(Deep.trajectory):
             num = 0
             bA = (Mup[i] == 0)
-            for x1, y1 in zip(xx[bA], yy[bA]):
+            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 Deep.atoms[num].position = np.array([y1, x1, zlimup[i]])
                 num += 1
                 
             bA = (Mdw[i] == 0)
-            for x1, y1 in zip(xx[bA], yy[bA]):
+            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 Deep.atoms[num].position = np.array([y1, x1, zlimdw[i]])
                 num += 1
 
-            ## TG glycerol
+        ### TG glycerol
+        for i, ts in enumerate(TGglyc.trajectory):
             num = 0
             bA = (1 <= Mup[i]) & (Mup[i] < 1e3)
-            for x1, y1 in zip(xx[bA], yy[bA]):
+            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 TGglyc.atoms[num].position = np.array([y1, x1, zlimup[i]])
                 num += 1
                 
             bA = (1 <= Mdw[i]) & (Mdw[i] < 1e3)
-            for x1, y1 in zip(xx[bA], yy[bA]):
+            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 TGglyc.atoms[num].position = np.array([y1, x1, zlimdw[i]])
                 num += 1
 
-            ## TG acyl
+        ### TG acyl
+        for i, ts in enumerate(TGacyl.trajectory):
             num = 0
             bA = (0 < Mup[i]) & (Mup[i] < 1)
-            for x1, y1 in zip(xx[bA], yy[bA]):
+            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 TGacyl.atoms[num].position = np.array([y1, x1, zlimup[i]])
                 num += 1
                 
-            bA = (0 <= Mdw[i]) & (Mdw[i] < 1)
-            for x1, y1 in zip(xx[bA], yy[bA]):
+            bA = (0 < Mdw[i]) & (Mdw[i] < 1)
+            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 TGacyl.atoms[num].position = np.array([y1, x1, zlimdw[i]])
                 num += 1
+
 
         def write(fname, u):
             u.trajectory[-1]
             u.atoms.write(fname + '.gro')
-            
             xtc = mda.coordinates.XTC.XTCWriter(fname + '.xtc', u.atoms.n_atoms)
             for ts in u.trajectory:
                 xtc.write(ts)
             xtc.close()
-
+        
         write('PLacyl', PLacyl)
         write('Deep',   Deep)
         write('TGglyc', TGglyc)
