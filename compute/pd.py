@@ -243,7 +243,7 @@ class PackingDefectPMDA(ParallelAnalysisBase):
                      'HA', 'HB', 'HS', 'HX', 'HY']
         
         # loop over TG atoms efficiently.. not all TG atoms.
-        newTG = TG.select_atoms('prop z>%f or prop z<%f'.format(utz-3, ltz+3))
+        newTG = TG.select_atoms('prop z>%f or prop z<%f' %(utz-3, ltz+3))
         for atom in newTG:
             xatom, yatom, zatom = atom.position
 
