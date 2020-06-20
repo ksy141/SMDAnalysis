@@ -55,7 +55,37 @@ class PackingDefect:
                     acyl = 'n'
                 output[sl[1]] = [types_radii[sl[2]], acyl]
         return output
+
+
+    def defect_size(self, matrices, nbins=400, bin_max=150, 
+            prob=True, fname='defect_histogram.dat'):
+
+        rdf_settings = {'bins': nbins, 'range': (0, bin_max)}
+        _, edges = np.histogram([-1], **rdf_settings)
+        bins = 0.5 * (edges[1:] + edges[:-1])
     
+        hist = np.zeros(nbins)
+        for matrix in matrices:
+            defects = []
+            graph = self._make_graph(matrix)
+            visited = set([])
+            for n in graph:
+                if n not in visited:
+                    defect_loc = self._dfs(graph, n)
+                    visited = visited.union(defect_loc)
+                    #defects.append(len(defect_loc) * 0.01) #A2 to nm2
+                    defects.append(len(defect_loc))
+            
+            hist += np.histogram(defects, **rdf_settings)[0]
+        
+        if np.sum(hist) == 0:
+            return
+
+        if prob:
+            hist /= np.sum(hist)
+        np.savetxt(fname, np.transpose([bins, hist]), fmt="%8.5f")
+
+
     def _dfs(self, graph, start):
         visited, stack = set(), [start]
         while stack:
@@ -64,7 +94,6 @@ class PackingDefect:
                 visited.add(vertex)
                 stack.extend(graph[vertex] - visited)
         return visited
-    
     
     def _make_graph(self, matrix):
         graph = {}
@@ -96,7 +125,7 @@ class PackingDefect:
     
             graph[n] = set(nlist) - set([n])
         return graph
- 
+
 
 C2 = ' '.join(['C2%d' %i for i in range(2, 23)])
 C3 = ' '.join(['C3%d' %i for i in range(2, 23)])
@@ -278,7 +307,6 @@ class PackingDefectPMDA(ParallelAnalysisBase):
     
     def _conclude(self):
         print("Concluding...")
-        print(self._results)
         results = np.vstack(self._results)
         Mup    = results[:,0]
         Mdw    = results[:,1]
@@ -317,53 +345,65 @@ class PackingDefectPMDA(ParallelAnalysisBase):
             xxyy.append([xx, yy])
 
         ### PL acyl
+        PLacyls = []
         for i, ts in enumerate(PLacyl.trajectory):
             num = 0
             bA = (1e3 <= Mup[i]) & (Mup[i] < 1e6)
+            PLacyls.append(bA.astype(int))
             for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 PLacyl.atoms[num].position = np.array([y1, x1, zlimup[i]])
                 num += 1
                 
             bA = (1e3 <= Mdw[i]) & (Mdw[i] < 1e6)
+            PLacyls.append(bA.astype(int))
             for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 PLacyl.atoms[num].position = np.array([y1, x1, zlimdw[i]])
                 num += 1
 
         ### Deep
+        Deeps = []
         for i, ts in enumerate(Deep.trajectory):
             num = 0
             bA = (Mup[i] == 0)
+            Deeps.append(bA.astype(int))
             for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 Deep.atoms[num].position = np.array([y1, x1, zlimup[i]])
                 num += 1
                 
             bA = (Mdw[i] == 0)
+            Deeps.append(bA.astype(int))
             for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 Deep.atoms[num].position = np.array([y1, x1, zlimdw[i]])
                 num += 1
 
         ### TG glycerol
+        TGglycs = []
         for i, ts in enumerate(TGglyc.trajectory):
             num = 0
             bA = (1 <= Mup[i]) & (Mup[i] < 1e3)
+            TGglycs.append(bA.astype(int))
             for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 TGglyc.atoms[num].position = np.array([y1, x1, zlimup[i]])
                 num += 1
                 
             bA = (1 <= Mdw[i]) & (Mdw[i] < 1e3)
+            TGglycs.append(bA.astype(int))
             for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 TGglyc.atoms[num].position = np.array([y1, x1, zlimdw[i]])
                 num += 1
 
         ### TG acyl
+        TGacyls = []
         for i, ts in enumerate(TGacyl.trajectory):
             num = 0
             bA = (0 < Mup[i]) & (Mup[i] < 1)
+            TGacyls.append(bA.astype(int))
             for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 TGacyl.atoms[num].position = np.array([y1, x1, zlimup[i]])
                 num += 1
                 
             bA = (0 < Mdw[i]) & (Mdw[i] < 1)
+            TGacyls.append(bA.astype(int))
             for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
                 TGacyl.atoms[num].position = np.array([y1, x1, zlimdw[i]])
                 num += 1
@@ -381,4 +421,11 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         write('Deep',   Deep)
         write('TGglyc', TGglyc)
         write('TGacyl', TGacyl)
+
+        PD = PackingDefect()
+        PD.defect_size(PLacyls, fname='PLacyl.dat')
+        PD.defect_size(Deeps,   fname='Deep.dat')
+        PD.defect_size(TGglycs, fname='TGglyc.dat')
+        PD.defect_size(TGacyls, fname='TGacyl.dat')
+
 
