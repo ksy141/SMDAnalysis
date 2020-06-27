@@ -20,7 +20,7 @@ from .compute.membrane import Membrane
 from .compute.coord import Coord
 from .compute.dihedral import Dihedral
 from .common.covariance import Covariance
-from .scripts.reus_analysis import REUS_Analysis
+#from .scripts.reus_analysis import REUS_Analysis
 from .scripts.lammpsdatawriter import LAMMPSDATAWriter
 from .scripts.lammpstrjwriter import LAMMPSTRJWriter
 from .scripts.cgmapping import CGMapping, CGMappingPMDA
