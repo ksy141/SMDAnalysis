@@ -130,7 +130,7 @@ class PackingDefect:
 C2 = ' '.join(['C2%d' %i for i in range(2, 23)])
 C3 = ' '.join(['C3%d' %i for i in range(2, 23)])
 class PackingDefectPMDA(ParallelAnalysisBase):
-    def __init__(self, atomgroups, radii):
+    def __init__(self, atomgroups, radii, nbins=400, bin_max=150):
         u = atomgroups[0].universe
         self.N  = 3000 #The maximum number of defects
         self.dt = u.trajectory[0].dt
@@ -139,6 +139,8 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         self.dz = 1
         self.zcut = 1
         self.radii = radii
+        self.nbins = nbins
+        self.bin_max = bin_max
         super(PackingDefectPMDA, self).__init__(u, atomgroups)
 
     def _prepare(self):
@@ -423,9 +425,9 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         write('TGacyl', TGacyl)
 
         PD = PackingDefect()
-        PD.defect_size(PLacyls, fname='PLacyl.dat')
-        PD.defect_size(Deeps,   fname='Deep.dat')
-        PD.defect_size(TGglycs, fname='TGglyc.dat')
-        PD.defect_size(TGacyls, fname='TGacyl.dat')
+        PD.defect_size(PLacyls, fname='PLacyl.dat', nbins=self.nbins, bin_max=self.bin_max)
+        PD.defect_size(Deeps,   fname='Deep.dat',   nbins=self.nbins, bin_max=self.bin_max)
+        PD.defect_size(TGglycs, fname='TGglyc.dat', nbins=self.nbins, bin_max=self.bin_max)
+        PD.defect_size(TGacyls, fname='TGacyl.dat', nbins=self.nbins, bin_max=self.bin_max)
 
 

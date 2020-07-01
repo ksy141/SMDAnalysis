@@ -2,7 +2,7 @@ from MDAnalysis.coordinates.TRR import TRRWriter
 import MDAnalysis as mda
 import numpy as np
 
-class CGMappingSerial():
+class CGMappingSerial:
     """
     Map all-atom trajectories to CG trajectories
     mappings['POPC']['PO4'] = ['P', 'O11', 'O12', 'O13', 'O14']

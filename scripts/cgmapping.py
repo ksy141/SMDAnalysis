@@ -3,7 +3,7 @@ from MDAnalysis.coordinates.TRR import TRRWriter
 import MDAnalysis as mda
 import numpy as np
 
-class CGMapping():
+class CGMapping:
     """
     >>> cging = smda.CGMapping()
     >>> ags, CGnames = cging.create_ags(u, mappings)
