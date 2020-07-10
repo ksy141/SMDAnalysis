@@ -6,19 +6,19 @@ GL  = ['C1',  'HA',  'HB',
        'C3',  'HX',  'HY',
        'O31', 'C31', 'O32']
 
-C11  = ['C2%d' %n for n in range(2, 7)]
+C11  = ['C1%d' %n for n in range(2, 7)]
 C11 += ['H%dA' %n for n in range(2, 7)]
 C11 += ['H%dB' %n for n in range(2, 7)]
 
-C12  = ['C2%d' %n for n in range(7, 11)]
+C12  = ['C1%d' %n for n in range(7, 11)]
 C12 += ['H%dA' %n for n in range(7, 11)]
 C12 += ['H%dB' %n for n in range(7, 11)]
 
-C13  = ['C2%d' %n for n in range(11, 15)]
+C13  = ['C1%d' %n for n in range(11, 15)]
 C13 += ['H%dA' %n for n in range(11, 15)]
 C13 += ['H%dB' %n for n in range(11, 15)]
 
-C14  = ['C2%d' %n for n in range(15, 19)]
+C14  = ['C1%d' %n for n in range(15, 19)]
 C14 += ['H%dA' %n for n in range(15, 19)]
 C14 += ['H%dB' %n for n in range(15, 19)]
 C14 += ['H18C']
