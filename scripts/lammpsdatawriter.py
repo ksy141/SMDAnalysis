@@ -190,6 +190,7 @@ class LAMMPSDATAWriter(base.WriterBase):
         self.units['time'] = kwargs.pop('timeunit', self.units['time'])
         self.units['velocity'] = kwargs.pop('velocityunit',
                                  self.units['length']+'/'+self.units['time'])
+        
 
     def _write_atoms(self, atoms):
         self.f.write('\n')
@@ -333,8 +334,20 @@ class LAMMPSDATAWriter(base.WriterBase):
         try:
             atoms.types.astype(np.int32)
         except ValueError:
-            raise ValueError('LAMMPS.DATAWriter: atom types must be '+
-                    'convertible to integers')
+            t = 1; types = {}
+            for atom in atoms:
+                if atom.name in types.keys():
+                    atom.type = types[atom.name]
+                else:
+                    atom.type = t
+                    types[atom.name] = t
+                    t += 1
+            print('LAMMPS.DATAWriter: atom types must be '+
+                  'convertible to integers '+
+                  'so I changed atom types!')
+            print('Please note this assignment is '+
+                  'NOT temporary!!')
+            print(types)
 
         try:
             velocities = atoms.velocities
