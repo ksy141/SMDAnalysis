@@ -3,7 +3,7 @@ import numpy as np
 from MDAnalysis.analysis.distances import distance_array, self_distance_array
 from MDAnalysis.core.groups import AtomGroup
 from ..common.block import Block
-#from ..common.frame import Frame
+from ..common.frame import Frame
 
 class RDF:
     """
@@ -12,7 +12,8 @@ class RDF:
     >>> r = smda.RDF(nbins=100, limits=(0.0, 15.0)[A])
 
     1) For static atomic groups
-    >>> rdf = r.run(ag1, ag2, D=2/3, nblocks=1)
+    >>> rdf = r.run(ag1, ag2, D=2/3, 
+    ...             b=0[ns], e=1e10[ns], nblocks=1)
     >>> rdf[:,0] = bins [A]
     >>> rdf[:,1] = RDF (avg) [unitless]
     >>> rdf[:,2] = RDF (std) [unitless]
@@ -49,7 +50,7 @@ class RDF:
         self.shell_area = np.pi * (np.power(edges[1:], 2) - np.power(edges[:-1], 2))
 
 
-    def run(self, ag1, ag2, D = None, b=0, e=-1, skip=1, nblocks=1):
+    def run(self, ag1, ag2, D = None, b=0, e=1e10, skip=1, nblocks=1):
         """
         Run a RDF calculation for static atomic groups
         
@@ -57,8 +58,8 @@ class RDF:
         ---------
         ag1, ag2:   atomic groups
         D  = None   [int]
-        b  = 0      frame begins at b [int]
-        e  = -1     frame ends   at e [int]
+        b  = 0      [ns]
+        e  = 1e10   [ns]
         skip = 1    [int]
         nblocks = 1 [int]
 
@@ -73,11 +74,12 @@ class RDF:
         assert isinstance(ag2, AtomGroup)
         u = ag1.universe
         
-        print("frame begins at %d" %b)
-        print("frame ends   at %d" %e)
+        bframe, eframe = Frame().frame(u, b, e)
+        print("frame starts at %d" %bframe)
+        print("frame ends   at %d" %eframe)
 
         rdfs = []
-        for ts in u.trajectory[b:e:skip]:
+        for ts in u.trajectory[bframe:eframe+1:skip]:
             if D == 3:
                 rdf = self.run3d_frame(ag1.positions, ag2.positions, u.dimensions)
             elif D == 2:
