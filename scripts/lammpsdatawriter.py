@@ -127,7 +127,6 @@ from six.moves import zip, range, map
 import os
 import numpy as np
 
-from MDAnalysis.core import flags
 from MDAnalysis.core.groups import requires
 from MDAnalysis.lib import util, mdamath, distances
 from MDAnalysis.lib.util import cached
@@ -171,18 +170,18 @@ class LAMMPSDATAWriter(base.WriterBase):
     """
     format = 'DATA'
 
-    def __init__(self, filename, convert_units=None, **kwargs):
+    def __init__(self, filename, convert_units=True, **kwargs):
         """Set up a DATAWriter
 
         Parameters
         ----------
         filename : str
             output filename
+        convert_units : bool, optional
+            units are converted to the MDAnalysis base format; [``True``]  
         """
         self.filename = util.filename(filename, ext='data')
 
-        if convert_units is None:
-            convert_units = flags['convert_lengths']
         self.convert_units = convert_units
 
         self.units = {'time': 'fs', 'length': 'Angstrom'}
