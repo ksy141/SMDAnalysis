@@ -152,7 +152,10 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         
         dim = ts.dimensions.copy()
         pbc = dim[0:3]
-        hz  = pbc[2]/2 #half z
+        print(pbc)
+        pbc_xy0 = np.array([pbc[0],pbc[1],0])
+        pbc_xyz = np.array([pbc[0],pbc[1],pbc[2]])
+        #hz  = pbc[2]/2 #half z
         xarray = np.arange(0, pbc[0], self.dx)
         yarray = np.arange(0, pbc[1], self.dy)
         xx, yy = np.meshgrid(xarray, yarray)
@@ -161,11 +164,15 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         Mdw = np.zeros_like(xx)
 
         PL = atomgroups[0]
+        hz = np.average(PL.select_atoms('name P').positions[:,2])
+        aa = PL.universe.atoms
+        aa.positions -= pbc_xy0 * np.floor(aa.positions / pbc_xyz)
+
         zlimup = np.max(PL.positions[:,2])
         zlimdw = np.min(PL.positions[:,2])
 
-        PL_up = PL.select_atoms('name P and prop z>%f' %hz).residues.atoms
-        PL_dw = PL.select_atoms('name P and prop z>%f' %hz).residues.atoms
+        PL_up = PL.select_atoms('name P and prop z > %f' %hz).residues.atoms
+        PL_dw = PL.select_atoms('name P and prop z < %f' %hz).residues.atoms
         umemb = PL_up.select_atoms('name ' + C2 + C3)
         lmemb = PL_dw.select_atoms('name ' + C2 + C3)
         utz   = np.average(umemb.positions[:,2])
