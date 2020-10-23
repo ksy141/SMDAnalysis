@@ -421,10 +421,9 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         def write(fname, u):
             u.trajectory[-1]
             u.atoms.write(fname + '.gro')
-            xtc = mda.coordinates.XTC.XTCWriter(fname + '.xtc', u.atoms.n_atoms)
-            for ts in u.trajectory:
-                xtc.write(ts)
-            xtc.close()
+            with mda.Writer(fname + '.xtc', u.atoms.n_atoms) as W:
+                for ts in u.trajectory:
+                    W.write(u.atoms)
         
         write('PLacyl', PLacyl)
         write('Deep',   Deep)
