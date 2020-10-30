@@ -12,7 +12,7 @@ class PackingDefect:
         """
         Examples
         --------
-        pd = smda.PackingDefects()
+        pd = smda.PackingDefect()
         ff = os.getenv('HOME') + '/Dropbox/ff/charmm36.ff/'
         lipid = ff + 'top_all36_lipid.rtf'
         TRIO  = ff + 'TRIO.rtf'
