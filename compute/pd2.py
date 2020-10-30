@@ -3,6 +3,7 @@ import numpy as np
 from .radii import types_radii
 from MDAnalysis import Universe
 import MDAnalysis as mda
+np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
 class PackingDefect2:
     def __init__(self):
@@ -39,7 +40,7 @@ class PackingDefect2:
         TGglyc = ['O11', 'O21', 'O31', 'O12', 'O22', 'O32',
                   'C1', 'C2', 'C3', 'C11', 'C21', 'C31',
                   'HA', 'HB', 'HS', 'HX', 'HY']
- 
+
         top = open(topology_file)
         startread = False
         output = {}
@@ -87,7 +88,7 @@ class PackingDefect2:
                 types.append(0)
             else:
                 types.append(1)
-        
+
         ag.radii = radii * n_residues
         ag.bfactors = types * n_residues
 
@@ -98,7 +99,7 @@ class PackingDefect2:
         rdf_settings = {'bins': nbins, 'range': (0, bin_max)}
         _, edges = np.histogram([-1], **rdf_settings)
         bins = 0.5 * (edges[1:] + edges[:-1])
-    
+
         hist = np.zeros(nbins)
         for matrix in matrices:
             defects = []
@@ -110,9 +111,9 @@ class PackingDefect2:
                     visited = visited.union(defect_loc)
                     #defects.append(len(defect_loc) * 0.01) #A2 to nm2
                     defects.append(len(defect_loc))
-            
+
             hist += np.histogram(defects, **rdf_settings)[0]
-        
+
         if np.sum(hist) == 0:
             return
 
@@ -134,14 +135,14 @@ class PackingDefect2:
     def _make_graph(self, matrix):
         graph = {}
         xis, yis = matrix.shape
-    
+
         for (xi, yi), value in np.ndenumerate(matrix):
             if value == 0:
                 continue
-    
+
             n = xi * yis + yi
             nlist = []
-    
+
             for dx in [-1, 0, 1]:
                 for dy in [-1, 0, 1]:
                     # 8-neighbors
@@ -150,7 +151,7 @@ class PackingDefect2:
                     if matrix[x, y] == 1:
                         ndn = x * yis + y
                         nlist.append(ndn)
-    
+
                    # 4 neighbors
                    # if dx * dy == 0:
                    #     x = divmod(xi + dx, xis)[1]
@@ -158,7 +159,7 @@ class PackingDefect2:
                    #     if matrix[x, y] == 1:
                    #         ndn = x * yis + y
                    #         nlist.append(ndn)
-    
+
             graph[n] = set(nlist) - set([n])
         return graph
 
@@ -188,23 +189,23 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
         aa = ag.universe.atoms
         aa.positions -= pbc_xy0 * np.floor(aa.positions / pbc_xyz)
         hz = np.average(ag.select_atoms('name P').positions[:,2])
-        
+
         xarray = np.arange(0, pbc[0], self.dx)
         yarray = np.arange(0, pbc[1], self.dy)
         xx, yy = np.meshgrid(xarray, yarray)
-        
+
         M = {}; M['up'] = np.zeros_like(xx); M['dw'] = np.zeros_like(xx)
         Z = {}; Z['up'] = np.zeros_like(xx); Z['dw'] = np.zeros_like(xx)
         Z['up'] += hz; Z['dw'] += hz
-        
+
         zlim = {}
         zlim['up'] = np.max(ag.positions[:,2])
         zlim['dw'] = np.min(ag.positions[:,2])
-        
+
         PL = {}
         PL['up'] = ag.select_atoms('name P and prop z > %f' %hz).center_of_mass()[2]
         PL['dw'] = ag.select_atoms('name P and prop z < %f' %hz).center_of_mass()[2]
-        
+
         atoms = {}
         atoms['up'] = ag.select_atoms('prop z > %f' %(PL['up'] - 20))
         atoms['dw'] = ag.select_atoms('prop z < %f' %(PL['dw'] + 20))
@@ -212,21 +213,21 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
         for l in ['up', 'dw']:
             for atom in atoms[l]:
                 xatom, yatom, zatom = atom.position
-                
+
                 if l == 'up': assert zatom > PL[l] - 20, 'check Z pos'
                 if l == 'dw': assert zatom < PL[l] + 20, 'check Z pos'
 
                 radius, acyl = self.radii[atom.resname][atom.name]
- 
+
                 dxx =  xx - xatom
                 dxx -= pbc[0] * np.around(dxx/pbc[0])
-                
+
                 dyy =  yy - yatom
                 dyy -= pbc[1] * np.around(dyy/pbc[1])
-            
+
                 dist_meet = (np.sqrt(self.dx**2 + self.dy**2)/2 + radius)**2
                 bAr = dxx ** 2 + dyy ** 2 < dist_meet
-            
+
                 if acyl == -1:
                     M[l][bAr] = acyl
                     continue
@@ -242,11 +243,11 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
                     bA = bAr & bAnP & baZ
                     M[l][bA] = acyl
                     Z[l][bA] = zatom
-        
+
         return M['up'], M['dw'], PL['up']+5, PL['dw']-5, dim
         #return M['up'], M['dw'], zlim['up'], zlim['dw'], dim
 
-    
+
     def _conclude(self):
         print("Concluding...")
         results = np.vstack(self._results)
@@ -257,9 +258,10 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
         dim    = np.vstack(results[:,4])
 
         N  = self.N
-        df = Universe.empty(n_atoms = N, 
-                            n_residues = N, 
-                            atom_resindex = np.arange(N), 
+        df = Universe.empty(n_atoms = N,
+                            n_residues = N,
+                            atom_resindex = np.arange(N),
+                            residue_segindex = [0] * N
                             trajectory=True)
 
         df.add_TopologyAttr('resname', ['O'] * N)
@@ -273,9 +275,9 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
 
         for i, ts in enumerate(df.trajectory):
             df.trajectory[i].dimensions = dim[i]
-        
+
         defects = ['Deep', 'PLacyl', 'TGglyc', 'TGacyl']
-        
+
         defect_uni = {}; defect_clu = {}
         for d in defects: defect_uni[d] = df.copy()
         for d in defects: defect_clu[d] = []
@@ -294,7 +296,7 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
                     pos = np.array([x1, y1, zlimup[i]])
                     defect_uni[d].atoms[num].position = pos
                     num += 1
-                
+
                 bA = (Mdw[i] == defect_thr[d])
                 defect_clu[d].append(bA.astype(int))
                 ind = np.where(bA)
@@ -304,7 +306,7 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
                     pos = np.array([x1, y1, zlimdw[i]])
                     defect_uni[d].atoms[num].position = pos
                     num += 1
- 
+
         ### DEFECT LOCALIZATION
         for d in defects:
             u = defect_uni[d]
@@ -313,7 +315,7 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
             with mda.Writer(d + '2.xtc', u.atoms.n_atoms) as W:
                 for ts in u.trajectory:
                     W.write(u.atoms)
-        
+
         ### DEFECT CLUSTER
         PD = PackingDefect2()
         for d in defects:
