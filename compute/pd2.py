@@ -261,7 +261,7 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
         df = Universe.empty(n_atoms = N,
                             n_residues = N,
                             atom_resindex = np.arange(N),
-                            residue_segindex = [0] * N
+                            residue_segindex = [0] * N,
                             trajectory=True)
 
         df.add_TopologyAttr('resname', ['O'] * N)
