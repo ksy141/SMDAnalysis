@@ -57,7 +57,7 @@ class PackingDefect:
         return output
 
 
-    def defect_size(self, matrices, nbins=400, bin_max=150, 
+    def defect_size(self, matrices, nbins=600, bin_max=150, 
             prob=True, fname='defect_histogram.dat'):
 
         rdf_settings = {'bins': nbins, 'range': (0, bin_max)}
@@ -130,7 +130,7 @@ class PackingDefect:
 C2 = ' '.join(['C2%d' %i for i in range(2, 23)])
 C3 = ' '.join(['C3%d' %i for i in range(2, 23)])
 class PackingDefectPMDA(ParallelAnalysisBase):
-    def __init__(self, atomgroups, radii, nbins=400, bin_max=150):
+    def __init__(self, atomgroups, radii, nbins=600, bin_max=150):
         u = atomgroups[0].universe
         self.N  = 3000 #The maximum number of defects
         self.dt = u.trajectory[0].dt

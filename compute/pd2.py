@@ -167,7 +167,7 @@ class PackingDefect2:
 
 
 class PackingDefect2PMDA(ParallelAnalysisBase):
-    def __init__(self, atomgroups, radii, nbins=600, bin_max=150):
+    def __init__(self, atomgroups, radii, nbins=600, bin_max=150, prefix='./'):
         u = atomgroups[0].universe
         self.N  = 3000 #The maximum number of defects
         self.dt = u.trajectory[0].dt
@@ -321,5 +321,5 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
         ### DEFECT CLUSTER
         PD = PackingDefect2()
         for d in defects:
-            PD.defect_size(defect_clu[d], fname=d + '2.dat', nbins=self.nbins, bin_max=self.bin_max)
+            PD.defect_size(defect_clu[d], fname=self.prefix + d + '2.dat', nbins=self.nbins, bin_max=self.bin_max)
 
