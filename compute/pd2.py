@@ -73,28 +73,7 @@ class PackingDefect2:
         return output
 
 
-    def apply_top(self, ag, output):
-        u = ag.universe
-        assert hasattr(ag, 'radii'), 'radii not defined!'
-        assert hasattr(ag, 'bfactors'), 'bfactors not defined!'
-        first_residue = ag.residues[0]
-        n_residues = ag.residues.n_residues
-
-        radii = []; types = []
-        for atom in first_residue.atoms:
-            r, t = output[atom.name]
-            radii.append(r)
-            if t == 'a':
-                types.append(0)
-            else:
-                types.append(1)
-
-        ag.radii = radii * n_residues
-        ag.bfactors = types * n_residues
-
-
-    def defect_size(self, matrices, nbins, bin_max,
-            prob=True, fname='defect_histogram.dat'):
+    def defect_size(self, matrices, nbins, bin_max, fname, prob=True):
 
         rdf_settings = {'bins': nbins, 'range': (0, bin_max)}
         _, edges = np.histogram([-1], **rdf_settings)
@@ -176,6 +155,7 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
         self.radii = radii
         self.nbins = nbins
         self.bin_max = bin_max
+        self.prefix  = prefix
         super(PackingDefect2PMDA, self).__init__(u, atomgroups)
 
     def _prepare(self):
@@ -313,8 +293,8 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
         for d in defects:
             u = defect_uni[d]
             u.trajectory[-1]
-            u.atoms.write(d + '2.gro')
-            with mda.Writer(d + '2.xtc', u.atoms.n_atoms) as W:
+            u.atoms.write(self.prefix + d + '2.gro')
+            with mda.Writer(self.prefix + d + '2.xtc', u.atoms.n_atoms) as W:
                 for ts in u.trajectory:
                     W.write(u.atoms)
 
