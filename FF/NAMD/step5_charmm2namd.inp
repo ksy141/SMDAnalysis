@@ -1,0 +1,42 @@
+* charmm2namd
+*
+
+! Read CHARMM topology
+open read card unit 10 name ../toppar/top_all36_lipid.rtf
+read  rtf card unit 10
+
+open read card unit 20 name ../toppar/par_all36_lipid.prm
+read para card unit 20 flex
+
+stream ../toppar/toppar_water_ions.str
+
+
+! Read system information
+stream ../step5_assembly.str
+
+! Read PSF
+open read unit 10 card name ../step5_assembly.psf
+read psf  unit 10 card
+
+! Read Coor
+open read unit 10 card name ../step5_assembly.crd
+read coor unit 10 card
+
+! NAMD
+system "mkdir -p restraints toppar"
+system "cat ../step5_assembly.str | awk '{print tolower($0)}' | sed -e 's/ =//g' > step5_charmm2namd.str"
+
+stream membrane_restraint.namd.str
+stream membrane_restraint2.namd.str
+
+open write unit 10 card name step5_charmm2namd.pdb
+write coor unit 10 pdb
+
+open write unit 10 card name step5_charmm2namd.crd
+write coor unit 10 card
+
+open write unit 10 card name step5_charmm2namd.psf
+write  psf unit 10 card
+
+stop
+
