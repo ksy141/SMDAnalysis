@@ -97,7 +97,7 @@ langevinHydrogen        off
 
 # constant pressure
 langevinPiston          on
-langevinPistonTarget    1.01325
+langevinPistonTarget    1.00
 langevinPistonPeriod    50.0
 langevinPistonDecay     25.0
 langevinPistonTemp      $temp

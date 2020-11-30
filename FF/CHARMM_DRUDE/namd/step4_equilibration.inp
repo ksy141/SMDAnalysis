@@ -4,6 +4,12 @@ coordinates         ../step2_drude.pdb
 set temp            310;
 set outputname      step4_equilibration;
 
+# read system values written by CHARMM (need to convert uppercases to lowercases)
+exec tr "\[:upper:\]" "\[:lower:\]" < ../step2_drude.str | sed -e "s/ =//g" > step2_drude.str
+source              step2_drude.str
+
+temperature         $temp;
+
 outputName          $outputname; # base name for output from this run
                                  # NAMD writes two files at the end, final coord and vel
                                  # in the format of first-dyn.coor and first-dyn.vel
@@ -73,10 +79,6 @@ drudeBondLen        0.2                 # Please set 0.20 if drudeHardwall is no
 drudeBondConst      40000
 drudeNbtholeCut     5.0
 
-# read system values written by CHARMM (need to convert uppercases to lowercases)
-exec tr "\[:upper:\]" "\[:lower:\]" < ../step2_drude.str | sed -e "s/ =//g" > step2_drude.str
-source             step2_drude.str
-
 # Periodic Boundary conditions. Need this since for a start...
 cellBasisVector1     $a   0.0   0.0;   # vector to the next image
 cellBasisVector2    0.0    $b   0.0;
@@ -105,7 +107,7 @@ langevinHydrogen        off
 
 # constant pressure
 langevinPiston          on
-langevinPistonTarget    1.01325
+langevinPistonTarget    1.00
 langevinPistonPeriod    50.0
 langevinPistonDecay     25.0
 langevinPistonTemp      $temp
