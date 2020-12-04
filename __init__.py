@@ -14,8 +14,9 @@ from .compute.pd import PackingDefect, PackingDefectPMDA
 from .compute.pd2 import PackingDefect2, PackingDefect2PMDA
 from .compute.order_parameter import OrderParameters
 from .compute.rdf import RDF
-from .compute.density_help import density_help
-from .compute.density import Density
+from .compute.density_new import Density
+#from .compute.density_help import density_help
+#from .compute.density import Density
 #from .compute.old_density import OldDensity
 from .compute.membrane import Membrane
 from .compute.coord import Coord
@@ -32,3 +33,14 @@ from .scripts.cgmapping_residue import CGMappingResidue
 # from SMDAnalysis import *
 #__all__ = ['common', 'compute']
 
+
+### TO USE CYTHON DENSITY:
+#cat > make.sh << EOF
+##!/bin/bash
+#cd compute
+#python density_help_setup.py build_ext --inplace
+#rm -rf build *.c *.html
+#cd ..
+#EOF
+#
+#bash make.sh
