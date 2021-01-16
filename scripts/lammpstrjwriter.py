@@ -13,7 +13,7 @@ class LAMMPSTRJWriter:
 
 
     def write(self, filename, obj, types={}, pbc='pp pp pp',
-              b=0, e=1e10, skip=1, kj2kcal=True):
+              b=0, e=None, skip=1, kj2kcal=True):
         """
         Parameters
         ----------
@@ -21,8 +21,8 @@ class LAMMPSTRJWriter:
         obj = AtomGroup or Universe
         types = {'SOL': 1, 'SOD': 2, 'CLA': 3} or {}
         pbc = 'pp pp pp'
-        b = 0    [float]
-        e = 1e10 [float]
+        b = 0    frame begins at b [int]
+        e = None frame ends   at e [int]
         skip = 1 [int]
         kj2kcal = True [bool]
         
@@ -70,12 +70,10 @@ class LAMMPSTRJWriter:
         
 
         ### Write
-        bframe, eframe = Frame().frame(u, b, e)
-        nframes = int((eframe - bframe)/skip)
         f = open(filename, 'w')
-        for i, ts in enumerate(u.trajectory[bframe:eframe+1:skip]):
+        for i, ts in enumerate(u.trajectory[b:e:skip]):
             if i%100 == 0:
-                print("%d/%d processing..." %(i, nframes))
+                print("%d/%d processing..." %(i, u.trajectory.n_frames))
             dim = u.dimensions
             f.write("""ITEM: TIMESTEP
 {:d}
