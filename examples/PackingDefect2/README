@@ -1,0 +1,8 @@
+1. Execute
+python pdeval2.py
+
+2. Visualize with PyMOL
+pymol vis.pml
+
+3. Visualize with VMD
+vmd -e vis.tcl
