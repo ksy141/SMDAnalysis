@@ -7,6 +7,7 @@ This program is for GROMACS input generation with CHARMM36 FF.
 
 Correspondance: jul316@lehigh.edu or wonpil@lehigh.edu
 Last update: October 31, 2019
+Last update: March 3, 2021 by Siyoung Kim
 """
 
 from __future__ import print_function
@@ -494,8 +495,15 @@ def write_itp(toppar, psf):
 
     # Build DataBase
     #------------------------------
+    
+    ### ADDED
+    newpsftypes = []
+    for attype in psf.types: newpsftypes.append((toppar.params['atoms'][attype]['mass'], attype))
+    newpsftypes.sort()
+    psf.types = [attype[1] for attype in newpsftypes]
+    ### ADDED
 
-    psf.types.sort()
+    #psf.types.sort()
 
     dbbonds     = []
     dbpairs     = []
@@ -515,6 +523,7 @@ def write_itp(toppar, psf):
             b0 = toppar.params['bonds'][type1,type2][0]
             Kb = toppar.params['bonds'][type1,type2][1]
             dbbonds.append([type1,type2,b0,Kb])
+    
 
     # pairtypes
     for i in range(len(psf.types)):
@@ -528,11 +537,13 @@ def write_itp(toppar, psf):
                     ipair    = True
                 else:
                     isigma14, ieps14 = toppar.params['nonbonded'][type1]
+                    ipair    = True # ADDED
                 if type2 in toppar.params['nb14']:
                     jsigma14, jeps14 = toppar.params['nb14'][type2]
                     jpair    = True
                 else:
                     jsigma14, jeps14 = toppar.params['nonbonded'][type2]
+                    jpair    = True # ADDED
                 if ipair or jpair:
                     sigma14 = (isigma14 + jsigma14)/2.0
                     eps14   = (ieps14 * jeps14)**0.5
@@ -581,7 +592,7 @@ def write_itp(toppar, psf):
             dbcmap.append(icmap)
 
     dbbonds.sort()
-    dbpairs.sort()
+    #dbpairs.sort()
     dbnbfix.sort()
     dbangles.sort()
     dbdihedrals.sort()
@@ -624,9 +635,9 @@ def write_itp(toppar, psf):
         sigma, eps = toppar.params['nonbonded'][attype]
         if attype in toppar.params['nb14']:
             sigma14, eps14 = toppar.params['nb14'][attype]
-            itpFile.write(' %7s %5d %10.4f %12.6f %5s %20.11e %15.6e ; %19.11e %15.6e \n' % (attype, elementNumber, mass, charge, ptype, sigma, eps, sigma14, eps14))
+            itpFile.write(' %7s %5d %10.4f %10.3f %5s %20.11e %15.6e ; %19.11e %15.6e \n' % (attype, elementNumber, mass, charge, ptype, sigma, eps, sigma14, eps14))
         else:
-            itpFile.write(' %7s %5d %10.4f %12.6f %5s %20.11e %15.6e \n' % (attype, elementNumber, mass, charge, ptype, sigma, eps))
+            itpFile.write(' %7s %5d %10.4f %10.3f %5s %20.11e %15.6e \n' % (attype, elementNumber, mass, charge, ptype, sigma, eps))
 
     # nbfix
     if len(dbnbfix) > 0:
@@ -655,7 +666,7 @@ def write_itp(toppar, psf):
     # angletypes
     if len(dbangles) > 0:
         itpFile.write('\n[ angletypes ]\n')
-        itpFile.write('; i\tj\tk\tfunc\tth0\tcth\tS0\tKub\n')
+        itpFile.write('; i\tj\tk\tfunc\tth0\tKth\ts0\tKub\n')
         for angle in dbangles:
             type1, type2, type3, th0, cth, S0, Kub = angle
             itpFile.write('%7s %7s %7s %5d %14.7e %14.7e %14.7e %14.7e\n' % (type1, type2, type3, funcForAngles, th0, cth, S0, Kub))
@@ -663,7 +674,7 @@ def write_itp(toppar, psf):
     # dihedraltypes
     if len(dbdihedrals) > 0 or len(dbdihewilds) > 0:
         itpFile.write('\n[ dihedraltypes ]\n')
-        itpFile.write('; i\tj\tk\tl\tfunc\tphi0\tcp\tmult\n')
+        itpFile.write('; i\tj\tk\tl\tfunc\tphi0\tKphi\tmult\n')
         for dihedral in dbdihedrals:
             type1, type2, type3, type4, phi, cp, mult = dihedral
             itpFile.write('%7s %7s %7s %7s %5d %13.6e %13.6e %6d\n' % (type1, type2, type3, type4, funcForDihedrals, phi, cp, mult))
@@ -674,7 +685,7 @@ def write_itp(toppar, psf):
     # impropertypes
     if len(dbimpropers) > 0 or len(dbimprwilds) > 0:
         itpFile.write('\n[ dihedraltypes ]\n')
-        itpFile.write('; i\tj\tk\tl\tfunc\tq0\tcq\n')
+        itpFile.write('; i\tj\tk\tl\tfunc\tq0\tKq\n')
         for improper in dbimpropers:
             type1, type2, type3, type4, q0, cq = improper
             itpFile.write('%7s %7s %7s %7s %5d %13.6e %13.6e\n' % (type1, type2, type3, type4, funcForImpropers, q0, cq))
@@ -800,7 +811,7 @@ def write_itp(toppar, psf):
                 group = molgrps.index(i+1) + 1
             except:
                 None
-            itpFile.write(' %5d %10s %6s %8s %6s %6d %12.6f %10.4f   ; qtot %6.5f\n' % (i+1, attype, resnr, residu, iatom, i+1, charge, mass, qtot))
+            itpFile.write(' %5d %10s %6s %8s %6s %6d %12.6f %10.4f   ; qtot %6.3f\n' % (i+1, attype, resnr, residu, iatom, i+1, charge, mass, qtot))
 
         if molname not in psf.solv:
             # bonds
@@ -836,7 +847,7 @@ def write_itp(toppar, psf):
             # dihedrals
             if len(moldihedrals) > 0:
                 itpFile.write('\n[ dihedrals ]\n')
-                itpFile.write('; ai\taj\tak\tal\tfunct\tphi0\tcp\tmult\n')
+                itpFile.write('; ai\taj\tak\tal\tfunct\tphi0\tKphi\tmult\n')
                 for dihedral in moldihedrals:
                     atom1, atom2, atom3, atom4 = dihedral
                     itpFile.write('%5d %5d %5d %5d %5d\n' % (atom1, atom2, atom3, atom4, funcForDihedrals))
