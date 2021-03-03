@@ -7,6 +7,7 @@ This program is for GROMACS input generation with CHARMM36 FF.
 
 Correspondance: jul316@lehigh.edu or wonpil@lehigh.edu
 Last update: October 31, 2019
+Extended charge format
 """
 
 from __future__ import print_function

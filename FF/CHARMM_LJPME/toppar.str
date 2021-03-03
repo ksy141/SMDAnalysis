@@ -10,13 +10,12 @@ open read card unit 20 name toppar/par_all36m_prot.prm
 read para card unit 20 flex
 
 ! lipids
-open read card unit 10 name toppar/top_all36_lipid.rtf
+open read card unit 10 name toppar/top_all36_lipid_ljpme.rtf
 read  rtf card unit 10 append
 
-open read card unit 20 name toppar/par_all36_lipid.prm
+open read card unit 20 name toppar/par_all36_lipid_ljpme.prm
 read para card unit 20 append flex
 
 ! water and ions
 stream toppar/toppar_water_ions.str
-stream toppar/toppar_ions_won.str
 

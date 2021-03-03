@@ -1,15 +1,22 @@
-*  \\\\\\\ CHARMM36 All-Hydrogen Lipid Parameter File ///////
+*  \\\\\\\ CHARMM36(LJ-PME) All-Hydrogen Lipid Topology File ///////
 *  All comments and questions should be submitted to the
 *  parameter forum at the CHARMM website: www.charmm.org
 *
 
 !references
 !
-!Jeffery B. Klauda, Richard M. Venable, J. Alfredo Freites, Joseph
-!W. O'Connor, Douglas J. Tobias, Carlos Mondragon-Ramirez, Igor
-!Vorobyov, Alexander D. MacKerell, Jr. and Richard W. Pastor "Update of
-!the CHARMM All-Atom Additive Force Field for Lipids: Validation on Six
-!Lipid Types" J. Phys. Chem. B 2010, 114, 7830-7843
+!Yalun Yu, Andreas Krämer, Richard M. Venable, Bernard R. Brooks,
+!Jeffery B. Klauda, and Richard W. Pastor. "CHARMM36 Lipid Force Field 
+!with Explicit Treatment of Long-Range Dispersion: Parametrization 
+!and Validation for Phosphatidylethanolamine, Phosphatidylglycerol,
+!and Ether Lipids" J. Chem. Theory Comput. 2021
+!doi: 10.1021/acs.jctc.0c01327
+!
+!Yalun Yu, Andreas Krämer, Richard M. Venable, Andrew C. Simmonett,
+!Alexander D. MacKerell Jr., Jeffery B. Klauda, Richard W. Pastor,
+!and Bernard R. Brooks. "Semi-automated Optimization of the CHARMM36 
+!Lipid Force Field to Include Explicit Treatment of Long-Range Dispersion"
+!J. Chem. Theory Comput. 2021, doi: 10.1021/acs.jctc.0c01326
 !
 ! PUFA Modifications
 !Jeffery B. Klauda, Viviana Monje, Taehoon Kim, and Wonpil Im. "Improving
@@ -288,8 +295,8 @@ HAL2 CTL2 CL   OHL      0.00    6   180.00
 HAL3 CTL3 CL   OHL      0.00    6   180.00
 PL   OSLP CTL2 CTL1     0.407   2     0.00 ! Phos-gly, 8/05
 PL   OSLP CTL2 CTL1     0.241   1   180.00 ! Phos-gly, 8/05
-PL   OSLP CTL2 CTL2     0.407   2     0.00 ! Phos-gly, 8/05
-PL   OSLP CTL2 CTL2     0.241   1   180.00 ! Phos-gly, 8/05
+PL   OSLP CTL2 CTL2     0.2960  2      0.0 ! yy 2020 LJ-PME
+PL   OSLP CTL2 CTL2     0.1040  1    180.0 ! yy 2020 LJ-PME
 OSL  PL   OSL  CTL1     1.20    1   180.00 ! phosphate, new NA, 4/98, adm jr., PIP
 OSL  PL   OSL  CTL1     0.10    2   180.00 ! phosphate, new NA, 4/98, adm jr., PIP
 OSL  PL   OSL  CTL1     0.10    3   180.00 ! phosphate, new NA, 4/98, adm jr., PIP
@@ -327,49 +334,44 @@ X    CTL2 OSLP X        0.00    3     0.00 ! phosphate, new NA, 4/98, adm jr.
 X    CTL3 OSLP X        0.00    3     0.00 ! phosphate, new NA, 4/98, adm jr.
 CTL1 CTL2 CL   OSL     -0.15    1   180.00 ! methyl propionate, 12/92
 CTL1 CTL2 CL   OSL      0.53    2   180.00 ! methyl propionate, 12/92
-CTL2 CTL2 CL   OSL      0.000   6     0.00 ! glycerol & propl ester, 6/07
-CTL2 CTL2 CL   OSL      0.030   3   180.00 ! glycerol & propl ester, 6/07
-CTL2 CTL2 CL   OSL      0.432   2   180.00 ! glycerol & propl ester, 6/07
-CTL2 CTL2 CL   OSL      0.332   1     0.00 ! glycerol & propl ester, 6/07
-CTL3 CTL2 CL   OSL      0.000   6     0.00 ! glycerol & propl ester, 6/07
-CTL3 CTL2 CL   OSL      0.030   3   180.00 ! glycerol & propl ester, 6/07
-CTL3 CTL2 CL   OSL      0.432   2   180.00 ! glycerol & propl ester, 6/07
-CTL3 CTL2 CL   OSL      0.332   1     0.00 ! glycerol & propl ester, 6/07
-CTL3 CTL2 CTL2 CL       0.000   5   180.00 ! propyl ester, 6/07
-CTL3 CTL2 CTL2 CL       0.317   3   180.00 ! propyl ester, 6/07
-CTL3 CTL2 CTL2 CL       0.557   2     0.00 ! propyl ester, 6/07
-CTL3 CTL2 CTL2 CL       0.753   1     0.00 ! propyl ester, 6/07
-CTL2 CTL2 CTL2 CL       0.000   5   180.00 ! propyl ester, 6/07
-CTL2 CTL2 CTL2 CL       0.317   3   180.00 ! propyl ester, 6/07
-CTL2 CTL2 CTL2 CL       0.557   2     0.00 ! propyl ester, 6/07
-CTL2 CTL2 CTL2 CL       0.753   1     0.00 ! propyl ester, 6/07
-OSL  CTL2 CTL1 OSL     -0.429   4    60.00 ! glycerol, 8/08
-OSL  CTL2 CTL1 OSL      0.614   3     0.00 ! glycerol, 8/08 
-OSL  CTL2 CTL1 OSL     -0.115   2    60.00 ! glycerol, 8/08 
-OSL  CTL2 CTL1 OSL      0.703   1   180.00 ! glycerol, 8/08 
-OSLP CTL2 CTL1 OSL      0.000   4     0.00 ! Fit to QM, theta2, 07/08 jbk
-OSLP CTL2 CTL1 OSL      0.607   3   180.00 ! Fit to QM, theta2, 07/08 jbk
-OSLP CTL2 CTL1 OSL      0.254   2    60.00 ! Fit to QM, theta2, 07/08 jbk
-OSLP CTL2 CTL1 OSL      2.016   1   180.00 ! Fit to QM, theta2, 07/08 jbk
+CTL2 CTL2 CL   OSL    0.0600    3    180.0 ! yy 2020 LJ-PME
+CTL2 CTL2 CL   OSL    0.4500    2    180.0 ! yy 2020 LJ-PME
+CTL2 CTL2 CL   OSL    0.3200    1      0.0 ! yy 2020 LJ-PME
+CTL3 CTL2 CL   OSL    0.0600    3    180.0 ! yy 2020 LJ-PME
+CTL3 CTL2 CL   OSL    0.4500    2    180.0 ! yy 2020 LJ-PME
+CTL3 CTL2 CL   OSL    0.3200    1      0.0 ! yy 2020 LJ-PME
+CTL2 CTL2 CTL2 CL     0.4700    3    180.0 ! yy 2020 LJ-PME
+CTL2 CTL2 CTL2 CL     0.2300    2      0.0 ! yy 2020 LJ-PME
+CTL2 CTL2 CTL2 CL     0.6200    1      0.0 ! yy 2020 LJ-PME
+CTL3 CTL2 CTL2 CL     0.4700    3    180.0 ! yy 2020 LJ-PME
+CTL3 CTL2 CTL2 CL     0.2300    2      0.0 ! yy 2020 LJ-PME
+CTL3 CTL2 CTL2 CL     0.6200    1      0.0 ! yy 2020 LJ-PME
+OSL  CTL2 CTL1 OSL   -0.3390    4     60.0 ! yy 2020 LJ-PME
+OSL  CTL2 CTL1 OSL    0.6790    3      0.0 ! yy 2020 LJ-PME
+OSL  CTL2 CTL1 OSL   -0.0380    2     60.0 ! yy 2020 LJ-PME
+OSL  CTL2 CTL1 OSL    0.9400    1    180.0 ! yy 2020 LJ-PME
+OSLP CTL2 CTL1 OSL    0.6170    3    180.0 ! yy 2020 LJ-PME
+OSLP CTL2 CTL1 OSL    0.1320    2     60.0 ! yy 2020 LJ-PME
+OSLP CTL2 CTL1 OSL    2.1230    1    180.0 ! yy 2020 LJ-PME
 OSLP CTL2 CTL2 OSL      0.000   4     0.00 ! Fit to QM, theta2, 07/08 jbk
 OSLP CTL2 CTL2 OSL      0.607   3   180.00 ! Fit to QM, theta2, 07/08 jbk
 OSLP CTL2 CTL2 OSL      0.254   2    60.00 ! Fit to QM, theta2, 07/08 jbk
 OSLP CTL2 CTL2 OSL      2.016   1   180.00 ! Fit to QM, theta2, 07/08 jbk
+OSLP CTL2 CTL1 CTL2     0.1620  3      0.0 ! Yalun 2020 LJ-PME
 CTL3 CTL1 CTL2 OSL      0.000   3     0.00 ! glycerol, theta3
 CTL2 CTL1 CTL2 OSL      0.000   3     0.00 ! glycerol, theta3
 CTL3 CTL2 CTL2 OSL      0.000   3     0.00 ! glycerol, theta3
 CTL2 CTL2 CTL2 OSL      0.000   3     0.00 ! glycerol, theta3
 CL   OSL  CTL1 CTL2     0.000   4     0.00 ! glycerol, beta1 6/07
-CL   OSL  CTL1 CTL2     0.150   3   180.00 ! glycerol, beta1 6/07
-CL   OSL  CTL1 CTL2     1.453   2   180.00 ! glycerol, beta1 6/07
-CL   OSL  CTL1 CTL2     0.837   1   180.00 ! glycerol, beta1 6/07
-CL   OSL  CTL1 CTL3     0.000   4     0.00 ! glycerol, beta1 6/07
-CL   OSL  CTL1 CTL3     0.150   3   180.00 ! glycerol, beta1 6/07
-CL   OSL  CTL1 CTL3     1.453   2   180.00 ! glycerol, beta1 6/07
-CL   OSL  CTL1 CTL3     0.837   1   180.00 ! glycerol, beta1 6/07
-CL   OSL  CTL2 CTL1     0.267   3   180.00 ! glycerol, gamma1 6/07 
-CL   OSL  CTL2 CTL1     0.173   2     0.00 ! glycerol, gamma1 6/07 
-CL   OSL  CTL2 CTL1     0.781   1   180.00 ! glycerol, gamma1 6/07
+CL   OSL  CTL1 CTL2    0.1740   3    180.0 ! yy 2020 LJ-PME
+CL   OSL  CTL1 CTL2    1.3940   2    180.0 ! yy 2020 LJ-PME
+CL   OSL  CTL1 CTL2    0.8640   1    180.0 ! yy 2020 LJ-PME
+CL   OSL  CTL1 CTL3    0.1740   3    180.0 ! yy 2020 LJ-PME
+CL   OSL  CTL1 CTL3    1.3940   2    180.0 ! yy 2020 LJ-PME
+CL   OSL  CTL1 CTL3    0.8640   1    180.0 ! yy 2020 LJ-PME
+CL   OSL  CTL2 CTL1    0.3430   3    180.0 ! yy 2020 LJ-PME
+CL   OSL  CTL2 CTL1    0.1350   2      0.0 ! yy 2020 LJ-PME
+CL   OSL  CTL2 CTL1    0.7150   1    180.0 ! yy 2020 LJ-PME
 X    CTL2 NTL  X        0.26    3     0.00 ! tetramethylammonium
 X    CTL5 NTL  X        0.23    3     0.00 ! tetramethylammonium
 X    CTL1 NH3L X        0.10    3     0.00 ! for POPS
@@ -378,8 +380,8 @@ NH3L CTL2 CTL2 OHL      0.7     1   180.00 ! ethanolamine
 NH3L CTL2 CTL2 OSLP     0.7     1   180.00 ! ethanolamine
 NTL  CTL2 CTL2 OHL      4.3     1   180.00 ! choline, 12/92
 NTL  CTL2 CTL2 OHL     -0.4     3   180.00 ! choline, 12/92
-NTL  CTL2 CTL2 OSLP     3.3     1   180.00 ! choline, 12/92
-NTL  CTL2 CTL2 OSLP    -0.4     3   180.00 ! choline, 12/92
+NTL  CTL2 CTL2 OSLP    -0.3400  3    180.0 ! yy 2020 LJ-PME
+NTL  CTL2 CTL2 OSLP     3.3000  1    180.0 ! yy 2020 LJ-PME
 X    CTL1 CTL1 X        0.200   3     0.00 ! alkane, 3/92
 X    CTL1 CTL2 X        0.200   3     0.00 ! alkane, 3/92
 X    CTL1 CTL3 X        0.200   3     0.00 ! alkane, 3/92
@@ -507,11 +509,11 @@ CRL1     0.0       -0.0360    2.010 0.0 -0.01 1.9 ! CGAFF, jbk add for cholester
 CRL2     0.0       -0.0600    2.020 0.0 -0.01 1.9 ! CPEN, cyclopentane, 8/06 viv (jbk add)
 
 !
-OBL      0.0       -0.1192    1.6470  0.0 -0.12 1.4
+OBL      0.0       -0.1192    1.6470  0.0 -0.12 1.4 ! yy 2020 LJ-PME
 OCL      0.0       -0.12      1.70
 O2L      0.0       -0.12      1.70
 OHL      0.0       -0.1521    1.77
-OSL      0.0       -0.1000    1.6809 !viv dec06 ether parameter
+OSL      0.0       -0.1000    1.6809 ! yy 2020 LJ-PME
 OSLP     0.0       -0.1000    1.6500 !viv dec06 ether parameter
 !
 NH3L     0.0       -0.20      1.85  ! ethanolamine

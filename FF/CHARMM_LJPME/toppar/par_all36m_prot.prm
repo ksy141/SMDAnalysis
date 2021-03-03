@@ -1042,7 +1042,6 @@ DIHEDRALS
 NH2  CT1  C    O        0.0000  1     0.00
 NH2  CT2  C    O        0.0000  1     0.00   ! Neutral Gly Nterminus
 NH2  CT1  C    NH1      0.0000  1     0.00
-NH2  CT1  C    N        0.0000  1     0.00
 NH2  CT2  C    NH1      0.0000  1     0.00   ! Neutral Gly Nterminus
 NH2  CT2  C    N        0.0000  1     0.00   ! NNEU
 NH2  CT1  CT2A HA2      0.2000  3     0.00   ! From X    CT1  CT2  X
@@ -1950,7 +1949,6 @@ CT2  CT2  CC   NH2      0.0500  6   180.00 ! From X    CT2  CC   X
 CT2  CT2  CC   OC       0.0500  6   180.00 ! From X    CT2  CC   X
 !Glu/Hsp
 NH1  CT1  CT2A HA2      0.2000  3     0.00 ! From X    CT1  CT2  X
-NH2  CT1  CT2A CT2      0.2000  3     0.00 ! From X    CT1  CT2  X !N terminus
 NH3  CT1  CT2A CT2      0.2000  3     0.00 ! From X    CT1  CT2  X !N terminus
 CT1  CT2A CT2  HA2      0.1900  3     0.00 ! From X    CT2  CT2  X
 HB1  CT1  CT2A HA2      0.2000  3     0.00 ! From X    CT1  CT2  X
