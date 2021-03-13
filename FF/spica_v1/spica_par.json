@@ -4546,5 +4546,12 @@
          "epsilon": 0.36,
          "sigma": 4.478,
          "comment": "# sdk3"
-      }]
+      },{
+         "param": "angle",
+         "types": ["EST2","GL","EST2"],
+         "potential": "sdk",
+         "k": 1,
+         "theta0": 95,
+         "comment": "# added"
+	  }]
 }
