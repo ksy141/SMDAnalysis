@@ -1,7 +1,6 @@
 from ..common.frame import Frame
 from MDAnalysis.core.groups import AtomGroup
 from MDAnalysis import Universe
-import numpy as np
 
 class LAMMPSTRJWriter:
     def __init__(self):
@@ -51,14 +50,12 @@ class LAMMPSTRJWriter:
         try:
             u.atoms.forces
             force_b = True
-            w = "{:6d} {:5s} {:9.4f} {:9.4f} {:9.4f} {:9.4f} {:9.4f} {:9.4f}\n" 
-            w = "%6d %5d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f"
-            item = "ITEM: ATOMS id type x y z fx fy fz"
+            w = "{:6d} {:>5s} {:9.4f} {:9.4f} {:9.4f} {:9.4f} {:9.4f} {:9.4f}\n" 
+            item = "ITEM: ATOMS id type x y z fx fy fz\n"
         except:
             force_b = False
-            w = "{:6d} {:5s} {:8.3f} {:8.3f} {:8.3f}\n" 
-            w = "%6d %5d %8.3f %8.3f %8.3f" 
-            item = "ITEM: ATOMS id type x y z"
+            w = "{:6d} {:>5s} {:8.3f} {:8.3f} {:8.3f}\n" 
+            item = "ITEM: ATOMS id type x y z\n"
 
         ### name2type
         t = 1
@@ -74,13 +71,11 @@ class LAMMPSTRJWriter:
 
         ### Write
         f = open(filename, 'w')
-        f.close()
-        f = open(filename, 'ab')
         for i, ts in enumerate(u.trajectory[b:e:skip]):
             if i%100 == 0:
                 print("%d/%d processing..." %(i, u.trajectory.n_frames))
             dim = u.dimensions
-            info = """ITEM: TIMESTEP
+            f.write("""ITEM: TIMESTEP
 {:d}
 ITEM: NUMBER OF ATOMS
 {:d}
@@ -88,29 +83,23 @@ ITEM: BOX BOUNDS {:s}
 0.000000 {:11.6f}
 0.000000 {:11.6f}
 0.000000 {:11.6f}
-""".format(i, ag.n_atoms, pbc, dim[0], dim[1], dim[2])
-            
-            f.write(str.encode(info + item + '\n'))
-            
-            pos = ag.positions
-            tys = np.transpose([ag.types]).astype(np.int64)
-            ind = np.transpose([np.arange(1, ag.n_atoms + 1)])
+""".format(
+    i, ag.n_atoms, pbc, dim[0], dim[1], dim[2]))
+            f.write(item)
 
-            if force_b:
-                fce = ag.forces
-                if kj2kcal: fce *= 0.239
+            if force_b and kj2kcal:
+                ag.forces *= 0.239
 
-                data = np.concatenate((
-                    ind, tys, pos, fce), axis=-1)
-
-                np.savetxt(f, data, fmt=w)
-
-            else:
-                data = np.concatenate((
-                    ind, tys, pos), axis=-1)
-                
-                np.savetxt(f, data, fmt=w)
-
+            for n, atom in enumerate(ag, 1):
+                pos = atom.position
+                if force_b:
+                    fce = atom.force
+                    f.write(w.format(n, atom.type, 
+                        pos[0], pos[1], pos[2],
+                        fce[0], fce[1], fce[2]))
+                else:
+                    f.write(w.format(n, atom.type,
+                        pos[0], pos[1], pos[2]))
         f.close()
 
 

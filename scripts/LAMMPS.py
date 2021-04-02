@@ -331,12 +331,19 @@ class DATAWriter(base.WriterBase):
         # check that types can be converted to ints if they aren't ints already
         try:
             atoms.types.astype(np.int32)
-        except ValueError:
-            raise_from(
-                ValueError(
-                    'LAMMPS.DATAWriter: atom types must be '
-                    'convertible to integers'),
-                    None)
+        #except ValueError:
+        #    raise_from(
+        #        ValueError(
+        #            'LAMMPS.DATAWriter: atom types must be '
+        #            'convertible to integers'),
+        #            None)
+        except:
+            t = 0; t_dict = {}
+            for atom in atoms:
+                if atom.type not in t_dict.keys():
+                    t += 1
+                    t_dict[atom.type] = str(t)
+                atom.type = t_dict[atom.type]
 
         try:
             velocities = atoms.velocities
