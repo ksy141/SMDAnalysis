@@ -217,6 +217,7 @@ class CGMappingSerial:
         uCG = mda.Universe.empty(n_atoms = n_atoms,
                                  n_residues = n_residues,
                                  atom_resindex = attr['resindex'],
+                                 residue_segindex = [0] * n_residues,
                                  trajectory = True,
                                  forces = True)
         
@@ -282,7 +283,7 @@ class CGMappingSerial:
             trr.units = units
 
         for ts in universe.trajectory:
-            trr.write(ts)
+            trr.write(universe.atoms)
         trr.close()
 
 
