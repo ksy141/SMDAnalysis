@@ -1,0 +1,10 @@
+set orthoscopic, on
+bg_color white
+
+set_color cPLhead, [0.430, 0.710, 1.00]
+set_color cPLtail, [0.000, 0.430, 0.86]
+set_color cTGhead, [0.140, 1.000, 0.140]
+set_color cTGtail, [1.000, 1.000, 0.000]
+
+run ~/sel.py
+
