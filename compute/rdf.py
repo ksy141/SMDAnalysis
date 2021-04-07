@@ -49,7 +49,7 @@ class RDF:
         self.shell_area = np.pi * (np.power(edges[1:], 2) - np.power(edges[:-1], 2))
 
 
-    def run(self, ag1, ag2, D = None, b=0, e=-1, skip=1, nblocks=1):
+    def run(self, ag1, ag2, D = None, b=0, e=None, skip=1, nblocks=1):
         """
         Run a RDF calculation for static atomic groups
         
@@ -58,7 +58,7 @@ class RDF:
         ag1, ag2:   atomic groups
         D  = None   [int]
         b  = 0      frame begins at b [int]
-        e  = -1     frame ends   at e [int]
+        e  = None   frame ends   at e [int]
         skip = 1    [int]
         nblocks = 1 [int]
 
