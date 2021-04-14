@@ -73,9 +73,6 @@ class RDF:
         assert isinstance(ag2, AtomGroup)
         u = ag1.universe
         
-        print("frame begins at %d" %b)
-        print("frame ends   at %d" %e)
-
         rdfs = []
         for ts in u.trajectory[b:e:skip]:
             if D == 3:
