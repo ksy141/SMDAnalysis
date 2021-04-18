@@ -29,6 +29,7 @@ from .scripts.lammpstrjwriter import LAMMPSTRJWriter
 from .scripts.cgmapping import CGMapping, CGMappingPMDA
 from .scripts.cgmapping_serial import CGMappingSerial
 from .scripts.cgmapping_residue import CGMappingResidue
+from .scripts.fibo import FiboSphere
 
 # THIS WILL WORK IF I DO
 # from SMDAnalysis import *
