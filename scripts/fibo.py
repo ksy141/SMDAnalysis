@@ -15,7 +15,7 @@ class FiboSphere:
         self.r   = r   # A
         self.N   = int(N)
         self.APL = APL # A
-        print('r: %8.3f\nN: %8d\nAPL: %6.3f' %(self.r, self.N, self.APL))
+        print('r: %8.3f\nN: %8d\nAPL: %6.3f\n\n' %(self.r, self.N, self.APL))
 
 
     def run(self, plot=True):
