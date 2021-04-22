@@ -97,5 +97,6 @@ stream toppar/toppar_all36_label_spin.str
 stream toppar/toppar_all36_label_fluorophore.str
 
 ! Additional topologies made by me
-stream toppar/dagn.str
+! stream toppar/dagn.str
 stream toppar/trio.str
+stream toppar/trip.str
