@@ -26,6 +26,7 @@ from .common.covariance import Covariance
 #from .scripts.lammpsdatawriter import LAMMPSDATAWriter
 from .scripts.LAMMPS           import DATAWriter
 from .scripts.lammpstrjwriter import LAMMPSTRJWriter
+from .scripts.lammpstrjreader import LAMMPSTRJReader
 from .scripts.cgmapping import CGMapping, CGMappingPMDA
 from .scripts.cgmapping_serial import CGMappingSerial
 from .scripts.cgmapping_residue import CGMappingResidue
