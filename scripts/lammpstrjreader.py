@@ -92,7 +92,7 @@ class LAMMPSTRJReader:
                 forces     = bAfce)
         
         
-        new.load_new(fac, forces = fac, order='fac')
+        new.load_new(fac, forces = fac, velocities = fac, order='fac')
         
         if bAvel: vel = df[['vx', 'vy', 'vz']].to_numpy().reshape(nframes, N, 3)
         if bAfce: fce = df[['fx', 'fy', 'fz']].to_numpy().reshape(nframes, N, 3)
