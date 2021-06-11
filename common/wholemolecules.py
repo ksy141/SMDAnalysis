@@ -14,18 +14,12 @@ class Wholemolecules:
         '''
         assert isinstance(atomgroup, AtomGroup)
         pbc = atomgroup.dimensions[0:3]
-        positions = atomgroup.positions
 
         if point is None:
-            dr  = positions - positions[0]
-            dr -= pbc * np.round(dr/pbc)
-            atomgroup.positions = positions[0] + dr
+            point = atomgroup.positions[0]
 
-        else:
-            dr  = positions - point
-            dr -= pbc * np.round(dr/pbc)
-            atomgroup.positions = point + dr
-
-
+        dr  = atomgroup.positions - point
+        dr -= pbc * np.round(dr/pbc)
+        atomgroup.positions = point + dr
 
 
