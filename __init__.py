@@ -9,6 +9,7 @@ from .common.traj_to_numpy import TrajectoryToNumpy
 from .common.units import *
 from .common.wholemolecules import Wholemolecules
 from .common.cluster import Cluster
+from .common.fit import Fit
 #from .compute.packing_defects import PackingDefects
 from .compute.pd import PackingDefect, PackingDefectPMDA
 from .compute.pd2 import PackingDefect2, PackingDefect2PMDA
