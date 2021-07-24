@@ -12,7 +12,10 @@ class Fit:
     numpy array with a shape of (-1, 3)
     '''
 
-    def __init__(self, mob_sel, ref_sel, mob):
+    def __init__(self):
+        pass
+
+    def run(self, mob_sel, ref_sel, mob):
         # Remove the center of geometry
         mob_sel0 = mob_sel - np.average(mob_sel, axis=0)
         ref_sel0 = ref_sel - np.average(ref_sel, axis=0)
@@ -24,4 +27,5 @@ class Fit:
         mob2     = mob1 + np.average(ref_sel, axis=0)
 
         return mob2, rmsd
+
 
