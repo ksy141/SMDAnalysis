@@ -3,37 +3,37 @@ read rtf card append
 *
 36  1
 
-RESI TRIC         0.00 !        Triolein (Re-ordered)
+RESI TRIV         0.00 !        Triolein (Re-ordered)
 !
 GROUP                  !               |       
 ATOM C1   CTL2  -0.005 !               |
-ATOM HA   HAL2   0.114 !        H2A---C12---H2B
-ATOM HB   HAL2   0.114 !               |      
-ATOM O11  OSL   -0.267 !               |        
-ATOM C11  CL     0.362 !         O12 = C11 
-ATOM O12  OBL   -0.426 !                \      
-ATOM C12  CTL2  -0.114 !                 O11
-ATOM H2A  HAL2   0.111 !                 |     
-ATOM H2B  HAL2   0.111 !            HA---C1---HB  
+ATOM HA   HAL2   0.110 !        H2A---C12---H2B
+ATOM HB   HAL2   0.110 !               |      
+ATOM O11  OSL   -0.247 !               |        
+ATOM C11  CL     0.343 !         O12 = C11 
+ATOM O12  OBL   -0.415 !                \      
+ATOM C12  CTL2  -0.104 !                 O11
+ATOM H2A  HAL2   0.104 !                 |     
+ATOM H2B  HAL2   0.104 !            HA---C1---HB  
 GROUP                  !                 |
-ATOM C2   CTL1   0.058 !            HS---C2--------------
-ATOM HS   HAL1   0.124 !                 | beta1        |
-ATOM O21  OSL   -0.259 !            O22  O21          theta3
-ATOM C21  CL     0.364 !             \\ /  beta2        |
-ATOM O22  OBL   -0.419 !               C21              |
-ATOM C22  CTL2  -0.100 !               |   beta3        |
-ATOM H2R  HAL2   0.116 !        H2R---C22---H2S         |
-ATOM H2S  HAL2   0.116 !               |                |
+ATOM C2   CTL1   0.060 !            HS---C2--------------
+ATOM HS   HAL1   0.125 !                 | beta1        |
+ATOM O21  OSL   -0.266 !            O22  O21          theta3
+ATOM C21  CL     0.371 !             \\ /  beta2        |
+ATOM O22  OBL   -0.420 !               C21              |
+ATOM C22  CTL2  -0.096 !               |   beta3        |
+ATOM H2R  HAL2   0.113 !        H2R---C22---H2S         |
+ATOM H2S  HAL2   0.113 !               |                |
 GROUP                  !               |    beta4       |
 ATOM C3   CTL2  -0.005 !               |                |
-ATOM HX   HAL2   0.114 !               |           HX---C3---HY
-ATOM HY   HAL2   0.114 !               |                |   gamma1
-ATOM O31  OSL   -0.267 !               |           O32  O31
-ATOM C31  CL     0.362 !               |            \\ /    gamma2
-ATOM O32  OBL   -0.426 !               |              C31
-ATOM C32  CTL2  -0.114 !               |              |     gamma3
-ATOM H2X  HAL2   0.111 !               |        H2X---C32---H2Y
-ATOM H2Y  HAL2   0.111 !               |              |
+ATOM HX   HAL2   0.110 !               |           HX---C3---HY
+ATOM HY   HAL2   0.110 !               |                |   gamma1
+ATOM O31  OSL   -0.247 !               |           O32  O31
+ATOM C31  CL     0.343 !               |            \\ /    gamma2
+ATOM O32  OBL   -0.415 !               |              C31
+ATOM C32  CTL2  -0.104 !               |              |     gamma3
+ATOM H2X  HAL2   0.104 !               |        H2X---C32---H2Y
+ATOM H2Y  HAL2   0.104 !               |              |
 GROUP                  !         
 ATOM C13  CTL2   -0.18 !     
 ATOM H3A  HAL2    0.09 !     
@@ -302,3 +302,4 @@ IMPR C21 O21 C22 O22
 IMPR C31 O31 C32 O32
 
 END
+
