@@ -3,7 +3,8 @@ import numpy as np
 from .radii import types_radii
 from MDAnalysis import Universe
 import MDAnalysis as mda
-np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+import warnings
+warnings.filterwarnings("ignore")
 
 class PackingDefect2:
     def __init__(self):
@@ -227,7 +228,6 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
                     Z[l][bA] = zatom
 
         return M['up'], M['dw'], PL['up']+5, PL['dw']-5, dim
-        #return M['up'], M['dw'], zlim['up'], zlim['dw'], dim
 
 
     def _conclude(self):

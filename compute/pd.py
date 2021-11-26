@@ -3,6 +3,8 @@ import numpy as np
 from .radii import types_radii
 from MDAnalysis import Universe
 import MDAnalysis as mda
+import warnings
+warnings.filterwarnings("ignore")
 
 class PackingDefect:
     def __init__(self):
@@ -36,7 +38,10 @@ class PackingDefect:
         tails += ['H%dX' %i for i in range(2, 23)]
         tails += ['H%dY' %i for i in range(2, 23)]
         tails += ['H16Z', 'H18T', 'H91', 'H101', 'H18Z', 'H20T']
-        
+        TGglyc = ['O11', 'O21', 'O31', 'O12', 'O22', 'O32',
+                  'C1', 'C2', 'C3', 'C11', 'C21', 'C31',
+                  'HA', 'HB', 'HS', 'HX', 'HY']
+
         top = open(topology_file)
         startread = False
         output = {}
@@ -49,21 +54,32 @@ class PackingDefect:
                 startread = False
             if startread and line.startswith('ATOM'):
                 sl = line.split()
-                if sl[1] in tails:
-                    acyl = 'a'
-                else:
-                    acyl = 'n'
+
+                ### PL headgroup: 1e6
+                ### PL acyl chains: 1e3
+                ### TG glycerol: 1
+                ### TG tail cahins: 1e-3
+                if resname != 'TRIO': #PL
+                    if sl[1] in tails:
+                        acyl = 1e3
+                    else:
+                        acyl = 1e6
+                else: #TG
+                    if sl[1] in TGglyc:
+                        acyl = 1
+                    else:
+                        acyl = 1e-3
+
                 output[sl[1]] = [types_radii[sl[2]], acyl]
         return output
 
 
-    def defect_size(self, matrices, nbins=600, bin_max=150, 
-            prob=True, fname='defect_histogram.dat'):
+    def defect_size(self, matrices, nbins, bin_max, fname, prob=True):
 
         rdf_settings = {'bins': nbins, 'range': (0, bin_max)}
         _, edges = np.histogram([-1], **rdf_settings)
-        bins = 0.5 * (edges[1:] + edges[:-1])
-    
+        #bins = 0.5 * (edges[1:] + edges[:-1])
+
         hist = np.zeros(nbins)
         for matrix in matrices:
             defects = []
@@ -75,14 +91,16 @@ class PackingDefect:
                     visited = visited.union(defect_loc)
                     #defects.append(len(defect_loc) * 0.01) #A2 to nm2
                     defects.append(len(defect_loc))
-            
+
             hist += np.histogram(defects, **rdf_settings)[0]
-        
+
         if np.sum(hist) == 0:
             return
 
         if prob:
             hist /= np.sum(hist)
+        
+        bins = np.linspace(0, bin_max, nbins + 1)[1:]
         np.savetxt(fname, np.transpose([bins, hist]), fmt="%8.5f")
 
 
@@ -94,18 +112,19 @@ class PackingDefect:
                 visited.add(vertex)
                 stack.extend(graph[vertex] - visited)
         return visited
-    
+
+
     def _make_graph(self, matrix):
         graph = {}
         xis, yis = matrix.shape
-    
+
         for (xi, yi), value in np.ndenumerate(matrix):
             if value == 0:
                 continue
-    
+
             n = xi * yis + yi
             nlist = []
-    
+
             for dx in [-1, 0, 1]:
                 for dy in [-1, 0, 1]:
                     # 8-neighbors
@@ -114,7 +133,7 @@ class PackingDefect:
                     if matrix[x, y] == 1:
                         ndn = x * yis + y
                         nlist.append(ndn)
-    
+
                    # 4 neighbors
                    # if dx * dy == 0:
                    #     x = divmod(xi + dx, xis)[1]
@@ -122,198 +141,120 @@ class PackingDefect:
                    #     if matrix[x, y] == 1:
                    #         ndn = x * yis + y
                    #         nlist.append(ndn)
-    
+
             graph[n] = set(nlist) - set([n])
         return graph
 
 
-C2 = ' '.join(['C2%d' %i for i in range(2, 23)])
-C3 = ' '.join(['C3%d' %i for i in range(2, 23)])
 class PackingDefectPMDA(ParallelAnalysisBase):
-    def __init__(self, atomgroups, radii, nbins=600, bin_max=150):
+    def __init__(self, atomgroups, radii, nbins=600, bin_max=150, prefix='./'):
         u = atomgroups[0].universe
         self.N  = 3000 #The maximum number of defects
         self.dt = u.trajectory[0].dt
         self.dx = 1
         self.dy = 1
         self.dz = 1
-        self.zcut = 1
         self.radii = radii
         self.nbins = nbins
         self.bin_max = bin_max
+        self.prefix  = prefix
         super(PackingDefectPMDA, self).__init__(u, atomgroups)
 
     def _prepare(self):
         pass
 
     def _single_frame(self, ts, atomgroups):
-        if (ts.time / 1000) % 10 == 0:
-            print("processing %d ns" %(int(ts.time/1000)))
-        
+        ag = atomgroups[0]
         dim = ts.dimensions.copy()
         pbc = dim[0:3]
-        print(pbc)
+        print('time: {:.3f}    pbc: {:.3f} {:.3f} {:.3f}'.format(ts.time/1000, pbc[0], pbc[1], pbc[2]))
         pbc_xy0 = np.array([pbc[0],pbc[1],0])
         pbc_xyz = np.array([pbc[0],pbc[1],pbc[2]])
-        #hz  = pbc[2]/2 #half z
+        aa = ag.universe.atoms
+        aa.positions -= pbc_xy0 * np.floor(aa.positions / pbc_xyz)
+        hz = np.average(ag.select_atoms('name P').positions[:,2])
+
         xarray = np.arange(0, pbc[0], self.dx)
         yarray = np.arange(0, pbc[1], self.dy)
         xx, yy = np.meshgrid(xarray, yarray)
 
-        Mup = np.zeros_like(xx)
-        Mdw = np.zeros_like(xx)
+        M = {}; M['up'] = np.zeros_like(xx); M['dw'] = np.zeros_like(xx)
 
-        PL = atomgroups[0]
-        hz = np.average(PL.select_atoms('name P').positions[:,2])
-        aa = PL.universe.atoms
-        aa.positions -= pbc_xy0 * np.floor(aa.positions / pbc_xyz)
+        zlim = {}
+        zlim['up'] = np.max(ag.positions[:,2])
+        zlim['dw'] = np.min(ag.positions[:,2])
 
-        zlimup = np.max(PL.positions[:,2])
-        zlimdw = np.min(PL.positions[:,2])
+        PL = {}
+        PL['up'] = ag.select_atoms('name P and prop z > %f' %hz).center_of_mass()[2]
+        PL['dw'] = ag.select_atoms('name P and prop z < %f' %hz).center_of_mass()[2]
 
-        PL_up = PL.select_atoms('name P and prop z > %f' %hz).residues.atoms
-        PL_dw = PL.select_atoms('name P and prop z < %f' %hz).residues.atoms
-        umemb = PL_up.select_atoms('name ' + C2 + C3)
-        lmemb = PL_dw.select_atoms('name ' + C2 + C3)
-        utz   = np.average(umemb.positions[:,2])
-        ltz   = np.average(lmemb.positions[:,2])
+        C2 = ' '.join(['C2%d' %i for i in range(2, 23)])
+        C3 = ' '.join(['C3%d' %i for i in range(2, 23)])
         
-        for atom in PL:
-            xatom, yatom, zatom = atom.position
-            catom = atom.residue.atoms.select_atoms('name C2')[0].position[2]
-            patom = atom.residue.atoms.select_atoms('name P')[0].position[2]
-            
-            if patom > hz: #up
-                if zatom < catom - 6*self.zcut:
-                    continue
-                l = 'up'
-                zarray = np.arange(catom-1, zlimup+1, self.dz)
-
-            elif patom < hz: #dw
-                if zatom > catom + 6*self.zcut:
-                    continue
-                l = 'dw'
-                zarray = np.arange(catom+1, zlimdw-1, -self.dz)
-
-            radius, acyl = self.radii[atom.resname][atom.name]
-            if acyl == 'a':
-                dM = 1e3
-            elif acyl == 'n':
-                dM = 1e6
+        memb = {}
+        memb['up'] = ag.select_atoms('(byres (name P and prop z > %f)) and name ' %hz + C2 + C3)
+        memb['dw'] = ag.select_atoms('(byres (name P and prop z < %f)) and name ' %hz + C2 + C3)
+        utz  = np.average(memb['up'].positions[:,2])
+        ltz  = np.average(memb['dw'].positions[:,2])
  
-            dxx = xx - xatom
-            dxx -= pbc[0] * np.around(dxx/pbc[0])
+        atoms = {}
+        atoms['up'] = ag.select_atoms('prop z > %f' %(utz - 3))
+        atoms['dw'] = ag.select_atoms('prop z < %f' %(ltz + 3))
+
+        for l in ['up', 'dw']:
+            for atom in atoms[l]:
+                xatom, yatom, zatom = atom.position
+
+                if l == 'up': assert zatom > utz - 3, 'check Z pos'
+                if l == 'dw': assert zatom < ltz + 3, 'check Z pos'
+
+                radius, acyl = self.radii[atom.resname][atom.name]
+
+                dxx =  xx - xatom
+                dxx -= pbc[0] * np.around(dxx/pbc[0])
+
+                dyy =  yy - yatom
+                dyy -= pbc[1] * np.around(dyy/pbc[1])
+
+                #dist_meet = (np.sqrt(self.dx**2 + self.dy**2)/2 + radius)**2
+                #bAr = dxx ** 2 + dyy ** 2 < dist_meet
+
+                if   acyl <  1e3 and l == 'up': #TG
+                    zarray = np.arange(utz, zlim['up'] + 1, self.dz)
+                elif acyl <  1e3 and l == 'dw': #TG
+                    zarray = np.arange(ltz, zlim['dw'] - 1, -self.dz)
+                elif acyl >= 1e3 and l == 'up': #PL
+                    catom = atom.residue.atoms.select_atoms('name C2')[0].position[2]
+                    zarray = np.arange(catom - 1, zlim['up'] + 1, self.dz)
+                elif acyl >= 1e3 and l == 'dw': #PL
+                    catom = atom.residue.atoms.select_atoms('name C2')[0].position[2]
+                    zarray = np.arange(catom + 1, zlim['dw'] - 1, -self.dz)
+
+                dzz = zarray - zatom
+
+
+                # in order to improve efficiency
+                # look around only the neighboring grids 
+                # search distance limit = (1+r)**2
+                dist_meet = (np.sqrt(self.dx**2 + self.dy**2 + self.dz**2)/2 + radius)**2
+                dist_lim = (1 + radius)**2
+                bx = dxx**2 < dist_lim 
+                by = dyy**2 < dist_lim
+                bz = dzz**2 < dist_lim
+
+                xind, yind = np.where(bx & by)
+                zind = np.where(bz)[0]
+
+                for xcell, ycell in zip(xind, yind):
+                    if len(zind) != 0:
+                        for zcell in zind:
+                            dist = dxx[xcell, ycell]**2 + dyy[xcell, ycell]**2 + dzz[zcell]**2
+
+                            if dist <= dist_meet: M[l][xcell, ycell] += acyl
                 
-            dyy = yy - yatom
-            dyy -= pbc[1] * np.around(dyy/pbc[1])
-            
-            dzz = zarray - zatom
-                
-            # in order to improve efficiency
-            # look around only the neighboring grids 
-            # search distance limit = (1+r)**2
-            dist_lim = (1 + radius)**2
-            bx = dxx**2 < dist_lim 
-            by = dyy**2 < dist_lim
-            bz = dzz**2 < dist_lim
+        return M['up'], M['dw'], PL['up']+5, PL['dw']-5, dim
 
-            new_xarray = xarray[bx[0]]
-            new_yarray = yarray[by[:,0]]
-            new_zarray = zarray[bz]
-            new_marray = np.meshgrid(new_xarray, new_yarray, new_zarray)
-            new_grid = np.vstack(new_marray).reshape(3,-1).T #grid.positions
-            
-            dist_meet = (np.sqrt(self.dx**2 + self.dy**2 + self.dz**2)/2 + radius)**2
-            dr2 = np.sum((new_grid - atom.position)**2, axis=1)
-            br  = dr2 < dist_meet
 
-            if np.sum(br) == 0:
-                continue
-            
-            # new_grid[br] -> grid < dist_meet
-            # new_grid[br][:,:-1] -> exclude the last column (z)
-            # np.unique -> same x, y but different z
-            ind = (np.unique(new_grid[br][:,:-1], axis=0)).astype(int)
-            #ind = ind.astype(int)
-
-            if l == 'up':
-                Mup[ind[:,0], ind[:,1]] += dM
-            elif l == 'dw':
-                Mdw[ind[:,0], ind[:,1]] += dM
-        
-        if len(atomgroups) == 1:
-            return Mup, Mdw, zlimup, zlimdw, dim
-        
-
-        ### TG
-        TG = atomgroups[1]
-        glycerols = ['O11', 'O21', 'O31', 'O12', 'O22', 'O32',
-                     'C1', 'C2', 'C3', 'C11', 'C21', 'C31',
-                     'HA', 'HB', 'HS', 'HX', 'HY']
-        
-        # loop over TG atoms efficiently.. not all TG atoms.
-        newTG = TG.select_atoms('prop z>%f or prop z<%f' %(utz-3, ltz+3))
-        for atom in newTG:
-            xatom, yatom, zatom = atom.position
-
-            if zatom > utz-3:
-                l = 'up'
-                zarray = np.arange(utz, zlimup+1, self.dz)
-            elif zatom < ltz+3:
-                l = 'dw'
-                zarray = np.arange(ltz, zlimdw-1, -self.dz)
-            else:
-                assert 1==0, 'TG atom?'
-            
-            radius, acyl = self.radii[atom.resname][atom.name]
-            if atom.name in glycerols:
-                dM = 1
-            else:
-                dM = 1e-3
- 
-            dxx = xx - xatom
-            dxx -= pbc[0] * np.around(dxx/pbc[0])
-                
-            dyy = yy - yatom
-            dyy -= pbc[1] * np.around(dyy/pbc[1])
-            
-            dzz = zarray - zatom
-                
-            # in order to improve efficiency
-            # look around only the neighboring grids 
-            # search distance limit = (1+r)**2
-            dist_lim = (1 + radius)**2
-            bx = dxx**2 < dist_lim 
-            by = dyy**2 < dist_lim
-            bz = dzz**2 < dist_lim
-
-            new_xarray = xarray[bx[0]]
-            new_yarray = yarray[by[:,0]]
-            new_zarray = zarray[bz]
-            new_marray = np.meshgrid(new_xarray, new_yarray, new_zarray)
-            new_grid = np.vstack(new_marray).reshape(3,-1).T #grid.positions
-            
-            dist_meet = (np.sqrt(self.dx**2 + self.dy**2 + self.dz**2)/2 + radius)**2
-            dr2 = np.sum((new_grid - atom.position)**2, axis=1)
-            br  = dr2 < dist_meet
-
-            if np.sum(br) == 0:
-                continue
-            
-            # new_grid[br] -> grid < dist_meet
-            # new_grid[br][:,:-1] -> exclude the last column (z)
-            # np.unique -> same x, y but different z
-            ind = (np.unique(new_grid[br][:,:-1], axis=0)).astype(int)
-            #ind = ind.astype(int)
-
-            if l == 'up':
-                Mup[ind[:,0], ind[:,1]] += dM
-            elif l == 'dw':
-                Mdw[ind[:,0], ind[:,1]] += dM
- 
-        return Mup, Mdw, zlimup, zlimdw, dim
-
-    
     def _conclude(self):
         print("Concluding...")
         results = np.vstack(self._results)
@@ -324,9 +265,10 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         dim    = np.vstack(results[:,4])
 
         N  = self.N
-        df = Universe.empty(n_atoms = N, 
-                            n_residues = N, 
-                            atom_resindex = np.arange(N), 
+        df = Universe.empty(n_atoms = N,
+                            n_residues = N,
+                            atom_resindex = np.arange(N),
+                            residue_segindex = [0] * N,
                             trajectory=True)
 
         df.add_TopologyAttr('resname', ['O'] * N)
@@ -341,99 +283,48 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         for i, ts in enumerate(df.trajectory):
             df.trajectory[i].dimensions = dim[i]
 
-        PLacyl = df.copy()
-        Deep   = df.copy()
-        TGacyl = df.copy()
-        TGglyc = df.copy()
+        defects = ['Deep', 'PLacyl', 'TGglyc', 'TGacyl']
 
-        xxyy = []
-        for i in range(len(df.trajectory)):
-            xarray = np.arange(0, dim[i][0], self.dx)
-            yarray = np.arange(0, dim[i][1], self.dy)
-            xx, yy = np.meshgrid(xarray, yarray)
-            xxyy.append([xx, yy])
+        defect_uni = {}; defect_clu = {}
+        for d in defects: defect_uni[d] = df.copy()
+        for d in defects: defect_clu[d] = []
+        defect_thr = {'Deep': [0, 1e-5],  'TGacyl': [1e-5, 1],  'TGglyc': [1, 1e3],  'PLacyl': [1e3, 1e6]}
 
-        ### PL acyl
-        PLacyls = []
-        for i, ts in enumerate(PLacyl.trajectory):
-            num = 0
-            bA = (1e3 <= Mup[i]) & (Mup[i] < 1e6)
-            PLacyls.append(bA.astype(int))
-            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
-                PLacyl.atoms[num].position = np.array([y1, x1, zlimup[i]])
-                num += 1
-                
-            bA = (1e3 <= Mdw[i]) & (Mdw[i] < 1e6)
-            PLacyls.append(bA.astype(int))
-            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
-                PLacyl.atoms[num].position = np.array([y1, x1, zlimdw[i]])
-                num += 1
+        for d in defects:
+            for i, ts in enumerate(defect_uni[d].trajectory):
+                num = 0
 
-        ### Deep
-        Deeps = []
-        for i, ts in enumerate(Deep.trajectory):
-            num = 0
-            bA = (Mup[i] == 0)
-            Deeps.append(bA.astype(int))
-            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
-                Deep.atoms[num].position = np.array([y1, x1, zlimup[i]])
-                num += 1
-                
-            bA = (Mdw[i] == 0)
-            Deeps.append(bA.astype(int))
-            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
-                Deep.atoms[num].position = np.array([y1, x1, zlimdw[i]])
-                num += 1
+                bA  = (defect_thr[d][0] <= Mup[i]) & (Mup[i] < defect_thr[d][1])
+                defect_clu[d].append(bA.astype(int))
+                ind = np.where(bA)
+                xs  = ind[1]; ys = ind[0]
 
-        ### TG glycerol
-        TGglycs = []
-        for i, ts in enumerate(TGglyc.trajectory):
-            num = 0
-            bA = (1 <= Mup[i]) & (Mup[i] < 1e3)
-            TGglycs.append(bA.astype(int))
-            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
-                TGglyc.atoms[num].position = np.array([y1, x1, zlimup[i]])
-                num += 1
-                
-            bA = (1 <= Mdw[i]) & (Mdw[i] < 1e3)
-            TGglycs.append(bA.astype(int))
-            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
-                TGglyc.atoms[num].position = np.array([y1, x1, zlimdw[i]])
-                num += 1
+                for x1, y1 in zip(xs, ys):
+                    pos = np.array([x1, y1, zlimup[i]])
+                    defect_uni[d].atoms[num].position = pos
+                    num += 1
 
-        ### TG acyl
-        TGacyls = []
-        for i, ts in enumerate(TGacyl.trajectory):
-            num = 0
-            bA = (0 < Mup[i]) & (Mup[i] < 1)
-            TGacyls.append(bA.astype(int))
-            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
-                TGacyl.atoms[num].position = np.array([y1, x1, zlimup[i]])
-                num += 1
-                
-            bA = (0 < Mdw[i]) & (Mdw[i] < 1)
-            TGacyls.append(bA.astype(int))
-            for x1, y1 in zip(xxyy[i][0][bA], xxyy[i][1][bA]):
-                TGacyl.atoms[num].position = np.array([y1, x1, zlimdw[i]])
-                num += 1
+                bA  = (defect_thr[d][0] <= Mdw[i]) & (Mdw[i] < defect_thr[d][1])
+                defect_clu[d].append(bA.astype(int))
+                ind = np.where(bA)
+                xs = ind[1]; ys = ind[0]
 
+                for x1, y1 in zip(xs, ys):
+                    pos = np.array([x1, y1, zlimdw[i]])
+                    defect_uni[d].atoms[num].position = pos
+                    num += 1
 
-        def write(fname, u):
+        ### DEFECT LOCALIZATION
+        for d in defects:
+            u = defect_uni[d]
             u.trajectory[-1]
-            u.atoms.write(fname + '.gro')
-            with mda.Writer(fname + '.xtc', u.atoms.n_atoms) as W:
+            u.atoms.write(self.prefix + d + '.gro')
+            with mda.Writer(self.prefix + d + '.xtc', u.atoms.n_atoms) as W:
                 for ts in u.trajectory:
                     W.write(u.atoms)
-        
-        write('PLacyl', PLacyl)
-        write('Deep',   Deep)
-        write('TGglyc', TGglyc)
-        write('TGacyl', TGacyl)
 
+        ### DEFECT CLUSTER
         PD = PackingDefect()
-        PD.defect_size(PLacyls, fname='PLacyl.dat', nbins=self.nbins, bin_max=self.bin_max)
-        PD.defect_size(Deeps,   fname='Deep.dat',   nbins=self.nbins, bin_max=self.bin_max)
-        PD.defect_size(TGglycs, fname='TGglyc.dat', nbins=self.nbins, bin_max=self.bin_max)
-        PD.defect_size(TGacyls, fname='TGacyl.dat', nbins=self.nbins, bin_max=self.bin_max)
-
+        for d in defects:
+            PD.defect_size(defect_clu[d], fname=self.prefix + d + '.dat', nbins=self.nbins, bin_max=self.bin_max)
 
