@@ -12,7 +12,7 @@ class PackingDefectOld:
         """
         Examples
         --------
-        pd = smda.PackingDefect()
+        pd = smda.PackingDefectOld()
         ff = os.getenv('HOME') + '/Dropbox/ff/charmm36.ff/'
         lipid = ff + 'top_all36_lipid.rtf'
         TRIO  = ff + 'TRIO.rtf'
@@ -141,7 +141,7 @@ class PackingDefectPMDAOld(ParallelAnalysisBase):
         self.radii = radii
         self.nbins = nbins
         self.bin_max = bin_max
-        super(PackingDefectPMDA, self).__init__(u, atomgroups)
+        super(PackingDefectPMDAOld, self).__init__(u, atomgroups)
 
     def _prepare(self):
         pass
@@ -430,7 +430,7 @@ class PackingDefectPMDAOld(ParallelAnalysisBase):
         write('TGglyc', TGglyc)
         write('TGacyl', TGacyl)
 
-        PD = PackingDefect()
+        PD = PackingDefectOld()
         PD.defect_size(PLacyls, fname='PLacyl.dat', nbins=self.nbins, bin_max=self.bin_max)
         PD.defect_size(Deeps,   fname='Deep.dat',   nbins=self.nbins, bin_max=self.bin_max)
         PD.defect_size(TGglycs, fname='TGglyc.dat', nbins=self.nbins, bin_max=self.bin_max)
