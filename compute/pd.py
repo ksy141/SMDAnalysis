@@ -15,10 +15,10 @@ class PackingDefect:
         Examples
         --------
         pd = smda.PackingDefect()
-        ff = os.getenv('HOME') + '/Dropbox/ff/charmm36.ff/'
+        ff = os.getenv('HOME') + '/SMDAnalysis/FF/CHARMM/toppar/'
         lipid = ff + 'top_all36_lipid.rtf'
-        TRIO  = ff + 'TRIO.rtf'
-        SAPI  = ff + 'stream/lipid/toppar_all36_lipid_inositol.str'
+        TRIO  = ff + 'trio.str'
+        SAPI  = ff + 'toppar_all36_lipid_inositol.str'
 
         radii = {'POPC': pd.read_top('POPC', lipid),
                  'DOPE': pd.read_top('DOPE', lipid),
@@ -75,24 +75,21 @@ class PackingDefect:
 
 
     def defect_size(self, matrices, nbins, bin_max, fname, prob=True):
+        bins = np.linspace(0, bin_max, nbins)
 
-        rdf_settings = {'bins': nbins, 'range': (0, bin_max)}
-        _, edges = np.histogram([-1], **rdf_settings)
-        #bins = 0.5 * (edges[1:] + edges[:-1])
-
-        hist = np.zeros(nbins)
+        defects = []
         for matrix in matrices:
-            defects = []
             graph = self._make_graph(matrix)
             visited = set([])
             for n in graph:
                 if n not in visited:
                     defect_loc = self._dfs(graph, n)
                     visited = visited.union(defect_loc)
-                    #defects.append(len(defect_loc) * 0.01) #A2 to nm2
                     defects.append(len(defect_loc))
 
-            hist += np.histogram(defects, **rdf_settings)[0]
+        hist, _ = np.histogram(defects, bins)
+        hist = hist.astype(np.float64)
+        binp = 0.5 * (_[1:] + _[:-1])
 
         if np.sum(hist) == 0:
             return
@@ -100,8 +97,7 @@ class PackingDefect:
         if prob:
             hist /= np.sum(hist)
         
-        bins = np.linspace(0, bin_max, nbins + 1)[1:]
-        np.savetxt(fname, np.transpose([bins, hist]), fmt="%8.5f")
+        np.savetxt(fname, np.transpose([binp, hist]), fmt="%8.5f")
 
 
     def _dfs(self, graph, start):
@@ -147,7 +143,7 @@ class PackingDefect:
 
 
 class PackingDefectPMDA(ParallelAnalysisBase):
-    def __init__(self, atomgroups, radii, nbins=600, bin_max=150, prefix='./'):
+    def __init__(self, atomgroups, radii, nbins=600, bin_max=150, prefix='./', prob=True):
         u = atomgroups[0].universe
         self.N  = 3000 #The maximum number of defects
         self.dt = u.trajectory[0].dt
@@ -158,6 +154,7 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         self.nbins = nbins
         self.bin_max = bin_max
         self.prefix  = prefix
+        self.prob    = prob
         super(PackingDefectPMDA, self).__init__(u, atomgroups)
 
     def _prepare(self):
@@ -257,12 +254,14 @@ class PackingDefectPMDA(ParallelAnalysisBase):
 
     def _conclude(self):
         print("Concluding...")
-        results = np.vstack(self._results)
-        Mup    = results[:,0]
-        Mdw    = results[:,1]
-        zlimup = results[:,2].flatten()
-        zlimdw = results[:,3].flatten()
-        dim    = np.vstack(results[:,4])
+        Mup = []; Mdw = []; zlimup = []; zlimdw = []; dim = []
+        for result in self._results:
+            if len(result) > 0:
+                Mup.append(result[0][0])
+                Mdw.append(result[0][1])
+                zlimup.append(result[0][2])
+                zlimdw.append(result[0][3])
+                dim.append(result[0][4])
 
         N  = self.N
         df = Universe.empty(n_atoms = N,
@@ -326,5 +325,9 @@ class PackingDefectPMDA(ParallelAnalysisBase):
         ### DEFECT CLUSTER
         PD = PackingDefect()
         for d in defects:
-            PD.defect_size(defect_clu[d], fname=self.prefix + d + '.dat', nbins=self.nbins, bin_max=self.bin_max)
+            PD.defect_size(defect_clu[d],
+                    fname=self.prefix + d + '.dat',
+                    nbins=self.nbins,
+                    bin_max=self.bin_max,
+                    prob=self.prob)
 
