@@ -4,7 +4,7 @@ from .radii import types_radii
 from MDAnalysis import Universe
 import MDAnalysis as mda
 
-class PackingDefect:
+class PackingDefectOld:
     def __init__(self):
         pass
 
@@ -129,7 +129,7 @@ class PackingDefect:
 
 C2 = ' '.join(['C2%d' %i for i in range(2, 23)])
 C3 = ' '.join(['C3%d' %i for i in range(2, 23)])
-class PackingDefectPMDA(ParallelAnalysisBase):
+class PackingDefectPMDAOld(ParallelAnalysisBase):
     def __init__(self, atomgroups, radii, nbins=600, bin_max=150):
         u = atomgroups[0].universe
         self.N  = 3000 #The maximum number of defects

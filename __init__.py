@@ -11,6 +11,7 @@ from .common.wholemolecules import Wholemolecules
 from .common.cluster import Cluster
 from .common.fit import Fit
 #from .compute.packing_defects import PackingDefects
+from .compute.pd_old import PackingDefectOld, PackingDefectPMDAOld
 from .compute.pd import PackingDefect, PackingDefectPMDA
 from .compute.pd2 import PackingDefect2, PackingDefect2PMDA
 from .compute.order_parameter import OrderParameters
