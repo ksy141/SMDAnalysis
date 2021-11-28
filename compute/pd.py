@@ -248,20 +248,20 @@ class PackingDefectPMDA(ParallelAnalysisBase):
                             dist = dxx[xcell, ycell]**2 + dyy[xcell, ycell]**2 + dzz[zcell]**2
 
                             if dist <= dist_meet: M[l][xcell, ycell] += acyl
-                
+        
         return M['up'], M['dw'], PL['up']+5, PL['dw']-5, dim
 
 
     def _conclude(self):
         print("Concluding...")
         Mup = []; Mdw = []; zlimup = []; zlimdw = []; dim = []
-        for result in self._results:
-            if len(result) > 0:
-                Mup.append(result[0][0])
-                Mdw.append(result[0][1])
-                zlimup.append(result[0][2])
-                zlimdw.append(result[0][3])
-                dim.append(result[0][4])
+        for r in self._results:
+            for rr in r:
+                Mup.append(rr[0])
+                Mdw.append(rr[1])
+                zlimup.append(rr[2])
+                zlimdw.append(rr[3])
+                dim.append(rr[4])
 
         N  = self.N
         df = Universe.empty(n_atoms = N,

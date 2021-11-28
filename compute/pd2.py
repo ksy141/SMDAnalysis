@@ -230,13 +230,13 @@ class PackingDefect2PMDA(ParallelAnalysisBase):
     def _conclude(self):
         print("Concluding...")
         Mup = []; Mdw = []; zlimup = []; zlimdw = []; dim = []
-        for result in self._results:
-            if len(result) > 0:
-                Mup.append(result[0][0])
-                Mdw.append(result[0][1])
-                zlimup.append(result[0][2])
-                zlimdw.append(result[0][3])
-                dim.append(result[0][4])
+        for r in self._results:
+            for rr in r:
+                Mup.append(rr[0])
+                Mdw.append(rr[1])
+                zlimup.append(rr[2])
+                zlimdw.append(rr[3])
+                dim.append(rr[4])
 
         N  = self.N
         df = Universe.empty(n_atoms = N,
