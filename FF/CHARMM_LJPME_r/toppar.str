@@ -16,6 +16,9 @@ read para card unit 20 flex
 open read card unit 10 name toppar/top_all36_lipid_ljpme.rtf
 read  rtf card unit 10 append
 
+open read card unit 10 name toppar/trin.str
+read  rtf card unit 10 append
+
 open read card unit 10 name toppar/triv.str
 read  rtf card unit 10 append
 
