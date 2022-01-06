@@ -15,6 +15,7 @@ from .compute.pd2 import PackingDefect2, PackingDefect2PMDA
 from .compute.order_parameter import OrderParameters
 from .compute.rdf import RDF
 from .compute.density_new import Density
+from .common.read_bonds_itp import BBItp
 #from .compute.density_help import density_help
 #from .compute.density import Density
 #from .compute.old_density import OldDensity
