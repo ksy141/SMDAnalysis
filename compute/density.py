@@ -1,72 +1,88 @@
 from __future__ import absolute_import, division, print_function
-from MDAnalysis import Universe
-from ..common.block import Block
-from ..common.frame import Frame
 import numpy as np
-import density_help
-import time
-
-mass = {'H': 1.008, 'O': 15.999, 'C': 12.011, 'N': 14.007, 
-        'P': 30.976, 'S':32.06, 'SOD':22.99, 'CLA':35.45}
+from MDAnalysis.core.groups import AtomGroup
+from ..common.block import Block
 
 class Density:
+    """
+    Compute the density with respect to Z dimension
+    >>> d = smda.Density().run(ag)
+    """
+
     def __init__(self):
         pass
-    
-    def density(self, u, selection=False, nbins=100, 
-                nblocks=5, b=0, e=10000):
 
-        if not selection:
-            print("provide selection i.e. 'resname TIP3'")
+    def run(self, ag, nbins=100, b=0, e=None, skip=1, nblocks=1, center=False):
+        """
+        Run a density calculation
+
+        Parameters
+        ----------
+        ag              Atomic Group
+        b = 0           frame begins at b [int]
+        e = None        frame ends   at e [int or None]
+        skip = 1        every skip frame  [int]
+        nblocks = 1     the number of blocks [int]
+        center = False  centering based on this atomic group 
+                        (e.g. Phosphorus atoms)
+
+        Output
+        ------
+        [:,0] = bins [A]
+        [:,1] = avg  [g/cm3]
+        [:,2] = std  [g/cm3]
+        """
+
+        assert isinstance(ag, AtomGroup)
+        if center: assert isinstance(center, AtomGroup)
+
+        u = ag.universe
+
+        print("frame begins at %d" %b)
+        if e == None:
+            nframes = u.trajectory.n_frames - 1
+            print("frame ends at %d" %nframes)
+        else:
+            print("frame ends at %d" %e)
         
-        start_time = time.time()
-        group = u.select_atoms(selection)
+        z = np.zeros(nbins)
+        ds = []
+        nframes = 0
 
-        masses = []
-        for atom in group:
-            if atom.name == 'SOD' or atom.name == 'CLA':
-                name = atom.name
+        for ts in u.trajectory[b:e:skip]:
+            pos  = ag.positions[:,2]
+            mass = ag.masses
+            pbc  = u.dimensions[0:3]
+
+            if center:
+                ### CENTERING
+                pos -= center.center_of_mass()[2]
+
+                ### WRAP from -pbcz/2 to pbcz/2
+                pos -= pbc[2] * np.around(pos/pbc[2])
+                bins = np.linspace(-pbc[2]/2, pbc[2]/2, nbins + 1)
+            
             else:
-                name = atom.name[0]
-            masses.append(mass[name])
-        masses = np.array(masses)
-    
-        
-        ### Get the closest begin and end frame corresponding to b, e
-        bframe, eframe = Frame().frame(u, b, e)
-        print("frame starts at: %d" %bframe)
-        print("frame ends   at: %d" %(eframe-1))
-        
-        zs = []
-        densities = []
-        for ts in u.trajectory[bframe:eframe]:
-            pbcx, pbcy, pbcz = u.dimensions[0:3]
-            d = self.density_frame(pbcx, pbcy, pbcz, nbins, group.positions, masses)
-        
-            zs.append(pbcz)
-            densities.append(d)
-        
-        X = np.linspace(0, np.average(zs), num=nbins)
-        X /= 10
-        
-        average, std = Block().block(densities, nblocks)
-        
-        print("--- %s seconds ---" % (time.time() - start_time))
-        print("Z (nm), density (kg/m^3), std (kg/m^3)")
-        
-        return X, average*1000, std*1000 # nm, kg/m3 kg/m3
+                ### WRAP from 0 to pbcz
+                pos -= pbc[2] * np.floor(pos/pbc[2])
+                bins = np.linspace(0, pbc[2], nbins + 1)
+
+            z += 0.5 * (bins[1:] + bins[:-1])
+            nframes += 1
+            
+            d = self.run_frame(pos, mass, pbc, bins)
+            ds.append(d)
+
+        z /= nframes
+        avg, std = Block().block(ds, nblocks)
+        return np.transpose([z, avg, std])
 
 
-    def density_frame(self, pbcx, pbcy, pbcz, nbins, positions, masses):
-        density = np.zeros(nbins, dtype = np.double)
-        dz = pbcz/nbins
-        vecs = positions[:,2]/pbcz
-        vecs -= np.floor(vecs)
-        indices = np.digitize(vecs, np.linspace(0, 1, nbins))
+    def run_frame(self, pos, mass, pbc, bins):
+        dz = bins[1] - bins[0]
+        h, _ = np.histogram(pos, weights=mass, bins=bins)
+        h /= pbc[0] * pbc[1] * dz * 0.602214
+        return h
 
-        density = density_help.density_help(indices, masses, density)
-        density[0] = density[1]
-        density /= pbcx * pbcy * dz * 0.602214
-        
-        return density
+
 

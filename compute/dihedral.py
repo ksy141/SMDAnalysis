@@ -1,5 +1,4 @@
 import numpy as np
-from ..common.frame import Frame
 #from MDAnalysis.analysis.dihedrals import Dihedral
 
 class Dihedral:
@@ -23,11 +22,10 @@ class Dihedral:
         print("indices(1-based): ",  ag.indices+1)
 
 
-    def run(self, b=0, e=100000, skip=1, cossin=True):
-        bframe, eframe = Frame().frame(self.u, b, e)
+    def run(self, b=0, e=None, skip=1, cossin=True):
         times = []
         angles = []
-        for ts in self.u.trajectory[bframe:eframe+1:skip]:
+        for ts in self.u.trajectory[b:e:skip]:
             times.append(ts.time/1000)
             angles.append(self.ag.dihedral.value())
 

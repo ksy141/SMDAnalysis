@@ -1,4 +1,3 @@
-from ..common.frame import Frame
 from MDAnalysis.core.groups import AtomGroup
 from MDAnalysis import Universe
 import numpy as np

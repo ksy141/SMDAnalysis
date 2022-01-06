@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 from ..common.block import Block
-from ..common.frame import Frame
 from MDAnalysis import Universe
 import numpy as np
 
@@ -10,13 +9,11 @@ class OrderParameters:
     
     def compute_OP(self, u, atomlists = [], 
                    resname = False, add_sel = False, sel_update = False, 
-                   nblocks = 5, b=0, e=1000000):
+                   nblocks = 5, b=0, e=None, skip=1):
 
         assert isinstance(u, Universe), 'provide a proper universe'
         assert resname, 'provide a resname'
         
-        ### Get the closest begin and end frames corresponding to b, e
-        bframe, eframe = Frame().frame(u, b, e)
         C_numbers = []
         Cs = []
         Hs = []
@@ -60,31 +57,19 @@ class OrderParameters:
         print('# of Carbons per molecule: %d' %natoms)
 
         output = []
-        for ts in u.trajectory[bframe:eframe]:
-            if int(ts.time) % 100000 == 0:
-                print("analyzing %d ns" %(int(ts.time/100000) * 100))
+        for ts in u.trajectory[b:e:skip]:
             p1 = np.repeat(group1.positions, repeats, axis=0)
             p2 = group2.positions
             dp = p2 - p1
             norm = np.sqrt(np.sum(np.power(dp, 2), axis=-1))
             cos_theta = dp[...,2]/norm
             S = -0.5 * (3 * np.square(cos_theta) - 1)
-            # out = np.split(S, splits)
 
             new_S = self._repeat(S, repeats)
             new_S.shape = (nmols, natoms)
             results = np.average(new_S, axis=0)
             output.append(results)
-     
-            #results = []
-            #for mol in range(nmols):
-            #    each_mol = []
-            #    for i in range(natoms):
-            #        index = mol*natoms + i
-            #        each_mol.append(np.average(out[index]))
-            #    results.append(each_mol)
-            #output.append(np.average(results, axis=0))
-        
+       
         avg, std = Block().block(output, nblocks)
 
         return np.transpose([C_numbers, avg, std])
