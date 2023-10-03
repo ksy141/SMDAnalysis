@@ -27,5 +27,5 @@ from .scripts.cgmapping import CGMapping, CGMappingPMDA
 from .scripts.cgmapping_serial import CGMappingSerial
 from .scripts.cgmapping_residue import CGMappingResidue
 from .scripts.fibo import FiboSphere
-
+from .compute.opc import *
 
