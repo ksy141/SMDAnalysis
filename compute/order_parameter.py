@@ -68,6 +68,8 @@ class OrderParameters:
             new_S = self._repeat(S, repeats)
             new_S.shape = (nmols, natoms)
             results = np.average(new_S, axis=0)
+            bA = results < 0 
+            results[bA] *= -1
             output.append(results)
        
         avg, std = Block().block(output, nblocks)
