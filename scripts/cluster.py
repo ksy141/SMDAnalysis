@@ -43,9 +43,13 @@ def parse_args():
 
     # percentage
     parser.add_argument("--percentage",    action="store_true",  dest="percentage", help="use percentage")
-    parser.add_argument("--no-percentage", action="store_false", dest="percentage", help="use percentage")
+    parser.add_argument("--no-percentage", action="store_false", dest="percentage", help="use number")
     parser.set_defaults(percentage=True)
-
+    
+    # inertia tensor
+    parser.add_argument("--inertia",    action="store_true",  dest="inertia", help="calculate inertia tensor")
+    parser.add_argument("--no-inertia", action="store_false", dest="inertia", help="do not calculate inertia tensor")
+    parser.set_defaults(inertia=True)
     return parser.parse_args()
 
 
@@ -57,9 +61,11 @@ def main():
     ag   = u.select_atoms(args.sel)
     Ntot = ag.residues.n_residues
     
-    frames = []
-    data   = {}
+    frames = [] #frame number
+    data   = {} #nuc
+    iner   = {} #tensor
     for i in range(args.ncluster): data[i] = []
+    for i in range(args.ncluster): iner[i] = []
 
     for i, ts in enumerate(u.trajectory[args.b : args.e : args.s]):
         frames.append(i)
@@ -78,14 +84,42 @@ def main():
                 data[i].append(result[i][1] / Ntot * 100)
             else:
                 data[i].append(result[i][1])
-    
+
+        if args.inertia:
+            for i in range(args.ncluster):
+                idx = result[i][0]
+                bA  = f == idx
+                newag = ag[bA]
+                newag.positions -= newag.center_of_geometry()
+
+                Ixx = np.sum(newag.positions[:,1]**2 + newag.positions[:,2]**2)
+                Iyy = np.sum(newag.positions[:,0]**2 + newag.positions[:,2]**2)
+                Izz = np.sum(newag.positions[:,0]**2 + newag.positions[:,1]**2)
+
+                Ixy = -np.sum(newag.positions[:,0] * newag.positions[:,1])
+                Ixz = -np.sum(newag.positions[:,0] * newag.positions[:,2])
+                Iyz = -np.sum(newag.positions[:,1] * newag.positions[:,2])
+
+                T = np.array([[Ixx, Ixy, Ixz], [Ixy, Iyy, Iyz], [Ixz, Iyz, Izz]])
+                w, v = np.linalg.eig(T)
+                k = 1.5 * (w[0]**4 + w[1]**4 + w[2]**4) / (w[0]**2 + w[1]**2 + w[2]**2)**2 - 0.5
+                iner[i].append(k)
+
     final = [frames]
     for i in range(args.ncluster):
         final.append(data[i])
+    
+    if args.inertia:
+        for i in range(args.ncluster):
+            final.append(iner[i])
+    
     final = np.array(final).T
     
     if args.csv:
-        np.savetxt(args.csv, final)
+        fmt = "%12d," + "%12.6f," * args.ncluster
+        if args.inertia:
+            fmt += "%12.6f," * args.ncluster
+        np.savetxt(args.csv, final, fmt=fmt[:-1])
 
     if args.png:
         fig, ax = plt.subplots()
@@ -103,8 +137,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
 
 
