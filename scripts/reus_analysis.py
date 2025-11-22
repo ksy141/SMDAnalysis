@@ -6,8 +6,8 @@ import pandas as pd
 import shutil
 import subprocess
 
-import matplotlib as mpl
-mpl.use('TkAgg')
+#import matplotlib as mpl
+#mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 
 ### HOW TO USE?
@@ -22,15 +22,15 @@ class REUS_Analysis:
     def __init__(self):
         pass
 
-    def get_data(self, directory = "./", plumed = "plumed.*", colvar="colvar.", nopbc = True):
+    def get_data(self, directory = "./", plumed = "plumed.*", colvar="colvar.*", nopbc = True):
         data = []
         os.chdir(directory)
-        plumed_files = glob.glob(plumed)
+        plumed_files = sorted(glob.glob(plumed))
+        colvar_files = sorted(glob.glob(colvar))
 
-        for ifile in plumed_files:
-            index = int(ifile.split('.')[1])
-
-            with open(ifile) as f:
+        for plumed_file, colvar_file in zip(plumed_files, colvar_files):
+            print(plumed_file, colvar_file)
+            with open(plumed_file) as f:
                 for line in f:
                     if re.search("RESTRAINT", line):
                         kappa = self._get_info('KAPPA=', line)
@@ -38,8 +38,8 @@ class REUS_Analysis:
                         at = round(at, 3)
 
             ### pd.read_csv() is much faster than np.loadtxt()
-            df = pd.read_csv(colvar + str(index), 
-                             delim_whitespace = True, 
+            df = pd.read_csv(colvar_file,
+                             delim_whitespace=True, 
                              header = None, 
                              comment='#', 
                              usecols=[0,1])

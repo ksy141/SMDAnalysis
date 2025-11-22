@@ -9,8 +9,8 @@ from .common.units import *
 from .common.wholemolecules import Wholemolecules
 from .common.cluster import Cluster
 from .common.fit import Fit
-from .compute.pd import PackingDefect, PackingDefectPMDA
-from .compute.pd2 import PackingDefect2, PackingDefect2PMDA
+#from .compute.pd import PackingDefect, PackingDefectPMDA
+#from .compute.pd2 import PackingDefect2, PackingDefect2PMDA
 from .compute.order_parameter import OrderParameters
 from .compute.rdf import RDF
 from .compute.density import Density
@@ -23,7 +23,7 @@ from .common.covariance import Covariance
 from .scripts.LAMMPS           import DATAWriter
 from .scripts.lammpstrjwriter import LAMMPSTRJWriter
 from .scripts.lammpstrjreader import LAMMPSTRJReader
-from .scripts.cgmapping import CGMapping, CGMappingPMDA
+#from .scripts.cgmapping import CGMapping, CGMappingPMDA
 from .scripts.cgmapping_serial import CGMappingSerial
 from .scripts.cgmapping_residue import CGMappingResidue
 from .scripts.fibo import FiboSphere
